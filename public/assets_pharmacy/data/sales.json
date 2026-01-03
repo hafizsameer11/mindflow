@@ -1,0 +1,26 @@
+[
+    {
+        "invoice_number":"20170001",
+        "medicine_name":"Abilify,Actamin,Actamin",
+        "total_price":"$220",
+        "date":"12-5-2023"
+    },
+    {
+        "invoice_number":"20169999",
+        "medicine_name":"Abilify,Actamin",
+        "total_price":"$100",
+        "date":"13-5-2023"
+    },
+    {
+        "invoice_number":"20169998",
+        "medicine_name":"Abilify",
+        "total_price":"$150",
+        "date":"14-5-2023"
+    },
+    {
+        "invoice_number":"20170001",
+        "medicine_name":"Abilify,Actamin,Actamin",
+        "total_price":"$220",
+        "date":"15-5-2023"
+    }
+]

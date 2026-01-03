@@ -1,0 +1,37 @@
+[
+    {
+        "id":"#SP001",
+        "product_name":"Benzaxapine Croplex",
+        "price":"$500",
+        "date":"12-05-2023",
+        "product_image":"product.jpg"
+    },
+    {
+        "id":"#SP002",
+        "product_name":"Ombinazol Bonibamol",
+        "price":"$100",
+        "date":"12-05-2023",
+        "product_image":"product2.jpg"
+    },
+    {
+        "id":"#SP003",
+        "product_name":"Dantotate Dantodazole",
+        "price":"$600",
+        "date":"12-05-2023",
+        "product_image":"product3.jpg"
+    },
+    {
+        "id":"#SP004",
+        "product_name":"Alispirox Aerorenone",
+        "price":"$700",
+        "date":"12-05-2023",
+        "product_image":"product4.jpg"
+    },
+    {
+        "id":"#SP005",
+        "product_name":"Nitrolozin Zithrotropin",
+        "price":"$1200",
+        "date":"12-05-2023",
+        "product_image":"product5.jpg"
+    }
+]

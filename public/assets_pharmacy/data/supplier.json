@@ -1,0 +1,32 @@
+[
+    {
+        "id": 25,
+        "product": "Abilify",
+        "name": "Discarsa",
+        "phone": "+51 1542565",
+        "email": "Discarsa@gmail.com",
+        "address": "Paseo Los Robles",
+        "company": "Discarsa Nicaragua",
+        "image": "product.jpg"
+    },
+    {
+        "id": 33,
+        "product": "Actamin",
+        "name": "Proveedor",
+        "phone": "+51 23687541",
+        "email": "proveedor@gmail.com",
+        "address": "Av circunvalación # 234",
+        "company": "mi farmacia",
+        "image": "product1.jpg"
+    },
+    {
+        "id": 42,
+        "product": "Adderall",
+        "name": "Discarsa",
+        "phone": "+51 96588552",
+        "email": "Discarsa@gmail.com",
+        "address": "Paseo Los Robles",
+        "company": "Discarsa Nicaragua",
+        "image": "product2.jpg"
+    }
+]

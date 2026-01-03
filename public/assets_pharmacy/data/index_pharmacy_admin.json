@@ -1,0 +1,42 @@
+[
+    {
+        "id":"01",
+        "name":"Ruby Perrin",
+        "address":"takrakka",
+        "telephone":"+54 1245463984",
+        "email":"Rubyperring@yahoo.mail",
+        "date_added":"April 14, 2023"
+    },
+    {
+        "id":"02",
+        "name":"Darren Elder",
+        "address":"339, Terromont Street",
+        "telephone":"+54 874654536",
+        "email":"darrenelder@gmail.com",
+        "date_added":"April 15, 2023"
+    },
+    {
+        "id":"03",
+        "name":"Deborah Angel",
+        "address":"takrakka",
+        "telephone":"+54 3647787889",
+        "email":"deborahangel@yahoo.com",
+        "date_added":"April 16, 2023"
+    },
+    {
+        "id":"04",
+        "name":"Ruby Perrin",
+        "address":"2061 Angus Road",
+        "telephone":"+54 1245463984",
+        "email":"Rubyperring@yahoo.mail",
+        "date_added":"April 17, 2023"
+    },
+    {
+        "id":"05",
+        "name":"Krystyna Rodriquez",
+        "address":"takrakka",
+        "telephone":"+54 8965722222",
+        "email":"krystynarodriquez@gmail.com",
+        "date_added":"April 18, 2023"
+    }
+]
