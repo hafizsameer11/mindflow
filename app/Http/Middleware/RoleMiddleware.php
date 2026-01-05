@@ -23,7 +23,18 @@ class RoleMiddleware
         $user = Auth::user();
 
         if (!in_array($user->role, $roles)) {
-            abort(403, 'Unauthorized access.');
+            // Redirect based on user role to their appropriate dashboard
+            if ($user->isAdmin()) {
+                return redirect()->route('admin.dashboard')->withErrors('You do not have permission to access this page.');
+            } elseif ($user->isPsychologist()) {
+                return redirect()->route('psychologist.dashboard')->withErrors('You do not have permission to access this page.');
+            } elseif ($user->isPatient()) {
+                return redirect()->route('patient.dashboard')->withErrors('You do not have permission to access this page.');
+            } else {
+                // Unknown role, redirect to home
+                Auth::logout();
+                return redirect()->route('index')->withErrors('You do not have a valid role. Please contact administrator.');
+            }
         }
 
         return $next($request);

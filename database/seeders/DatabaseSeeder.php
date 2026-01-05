@@ -12,6 +12,7 @@ use App\Models\Feedback;
 use App\Models\PsychologistAvailability;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 
 class DatabaseSeeder extends Seeder
 {
@@ -20,39 +21,45 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create Admin User
-        $admin = User::create([
-            'name' => 'Admin User',
-            'email' => 'admin@mindflow.com',
-            'password' => Hash::make('password123'),
-            'role' => 'admin',
-            'status' => 'active',
-        ]);
+        // Create Admin User (or get existing)
+        $admin = User::firstOrCreate(
+            ['email' => 'admin@mindflow.com'],
+            [
+                'name' => 'Admin User',
+                'password' => 'password123', // Will be hashed by the 'hashed' cast
+                'role' => 'admin',
+                'status' => 'active',
+            ]
+        );
 
         // Create Sample Psychologists
         $psychologists = [];
         $specializations = ['Career Counseling', 'Relationship Issues', 'Women\'s Issues', 'Self-Esteem Issues'];
         
         for ($i = 1; $i <= 5; $i++) {
-            $user = User::create([
-                'name' => "Dr. Psychologist {$i}",
-                'email' => "psychologist{$i}@mindflow.com",
-                'password' => Hash::make('password123'),
-                'role' => 'psychologist',
-                'phone' => '+123456789' . $i,
-                'status' => 'active',
-            ]);
+            $user = User::firstOrCreate(
+                ['email' => "psychologist{$i}@mindflow.com"],
+                [
+                    'name' => "Dr. Psychologist {$i}",
+                    'password' => 'password123', // Will be hashed by the 'hashed' cast
+                    'role' => 'psychologist',
+                    'phone' => '+123456789' . $i,
+                    'status' => 'active',
+                ]
+            );
 
-            $psychologist = Psychologist::create([
-                'user_id' => $user->id,
-                'specialization' => $specializations[array_rand($specializations)],
-                'experience_years' => rand(2, 15),
-                'consultation_fee' => rand(300, 700),
-                'bio' => "Experienced psychologist specializing in mental health and wellness.",
-                'qualifications' => ['qualification1.pdf', 'qualification2.pdf'],
-                'verification_status' => $i <= 3 ? 'verified' : 'pending',
-                'verified_at' => $i <= 3 ? now() : null,
-            ]);
+            $psychologist = Psychologist::firstOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'specialization' => $specializations[array_rand($specializations)],
+                    'experience_years' => rand(2, 15),
+                    'consultation_fee' => rand(300, 700),
+                    'bio' => "Experienced psychologist specializing in mental health and wellness.",
+                    'qualifications' => ['qualification1.pdf', 'qualification2.pdf'],
+                    'verification_status' => $i <= 3 ? 'verified' : 'pending',
+                    'verified_at' => $i <= 3 ? now() : null,
+                ]
+            );
 
             $psychologists[] = $psychologist;
 
@@ -73,20 +80,24 @@ class DatabaseSeeder extends Seeder
         // Create Sample Patients
         $patients = [];
         for ($i = 1; $i <= 10; $i++) {
-            $user = User::create([
-                'name' => "Patient {$i}",
-                'email' => "patient{$i}@mindflow.com",
-                'password' => Hash::make('password123'),
-                'role' => 'patient',
-                'phone' => '+123456789' . ($i + 10),
-                'status' => 'active',
-            ]);
+            $user = User::firstOrCreate(
+                ['email' => "patient{$i}@mindflow.com"],
+                [
+                    'name' => "Patient {$i}",
+                    'password' => 'password123', // Will be hashed by the 'hashed' cast
+                    'role' => 'patient',
+                    'phone' => '+123456789' . ($i + 10),
+                    'status' => 'active',
+                ]
+            );
 
-            $patient = Patient::create([
-                'user_id' => $user->id,
-                'medical_history' => 'No significant medical history.',
-                'emergency_contact' => '+1234567890',
-            ]);
+            $patient = Patient::firstOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'medical_history' => 'No significant medical history.',
+                    'emergency_contact' => '+1234567890',
+                ]
+            );
 
             $patients[] = $patient;
         }
@@ -124,22 +135,30 @@ class DatabaseSeeder extends Seeder
 
                 // Create prescription for completed appointments
                 if ($appointment->status === 'completed') {
-                    Prescription::create([
-                        'appointment_id' => $appointment->id,
-                        'psychologist_id' => $psychologist->id,
-                        'patient_id' => $patient->id,
-                        'notes' => 'Follow-up session recommended in 2 weeks.',
-                        'therapy_plan' => 'Continue with weekly sessions focusing on cognitive behavioral therapy.',
-                    ]);
+                    Prescription::firstOrCreate(
+                        ['appointment_id' => $appointment->id],
+                        [
+                            'psychologist_id' => $psychologist->id,
+                            'patient_id' => $patient->id,
+                            'notes' => 'Follow-up session recommended in 2 weeks.',
+                            'therapy_plan' => 'Continue with weekly sessions focusing on cognitive behavioral therapy.',
+                        ]
+                    );
 
-                    // Create feedback
-                    Feedback::create([
-                        'appointment_id' => $appointment->id,
-                        'patient_id' => $patient->id,
-                        'psychologist_id' => $psychologist->id,
-                        'rating' => rand(4, 5),
-                        'comment' => 'Great session, very helpful and understanding.',
-                    ]);
+                    // Create feedback (only if table exists)
+                    if (Schema::hasTable('feedbacks')) {
+                        Feedback::firstOrCreate(
+                            ['appointment_id' => $appointment->id],
+                            [
+                                'patient_id' => $patient->id,
+                                'psychologist_id' => $psychologist->id,
+                                'rating' => rand(4, 5),
+                                'comment' => 'Great session, very helpful and understanding.',
+                            ]
+                        );
+                    } else {
+                        $this->command->warn('Feedback table not found, skipping feedback creation. Run migrations first.');
+                    }
                 }
             }
         }

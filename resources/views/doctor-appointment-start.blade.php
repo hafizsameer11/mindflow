@@ -28,8 +28,8 @@
 						<div class="col-lg-8 col-xl-9">
 							<div class="dashboard-header">
 								<div class="header-back">
-									<a href="{{url('appointments')}}" class="back-arrow"><i class="fa-solid fa-arrow-left"></i></a>
-									<h3>Appointment Details</h3>
+									<a href="{{ route('psychologist.appointments.show', $appointment) }}" class="back-arrow"><i class="fa-solid fa-arrow-left"></i></a>
+									<h3>Video Session</h3>
 								</div>
 							</div>
 							<div class="appointment-details-wrap">
@@ -40,7 +40,12 @@
 										<li>
 											<div class="patinet-information">
 												<a href="#">
-													<img src="{{URL::asset('/assets/img/doctors-dashboard/profile-02.jpg')}}" alt="User Image">
+													@php
+														$patientImage = $appointment->patient->user->profile_image 
+															? asset('storage/' . $appointment->patient->user->profile_image) 
+															: asset('assets/img/doctors-dashboard/profile-02.jpg');
+													@endphp
+													<img src="{{ $patientImage }}" alt="Patient Image">
 												</a>
 												<div class="patient-info">
 													<p>#APT{{ str_pad($appointment->id, 4, '0', STR_PAD_LEFT) }}</p>
@@ -86,7 +91,7 @@
 											<ul>
 												<li>
 													@if($appointment->status == 'confirmed' && $appointment->meeting_link)
-														<a href="{{ route('psychologist.sessions.start', $appointment) }}" class="btn btn-primary btn-sm">
+														<a href="{{ route('psychologist.session.start', $appointment) }}" class="btn btn-primary btn-sm">
 															<i class="fa-solid fa-video"></i> Start Session
 														</a>
 													@endif
@@ -114,7 +119,7 @@
 										@if($appointment->status == 'confirmed' && $appointment->meeting_link)
 										<li>
 											<div class="start-btn">
-												<a href="{{ route('psychologist.sessions.start', $appointment) }}" class="btn btn-primary">Start Video Session</a>
+												<a href="{{ route('psychologist.session.start', $appointment) }}" class="btn btn-primary">Start Video Session</a>
 											</div>
 										</li>
 										@endif
@@ -129,12 +134,21 @@
 										<h5>Video Meeting</h5>
 									</div>
 									<div class="card-body">
-										<div id="jitsi-container" style="width: 100%; height: 500px; background: #000; border-radius: 8px;"></div>
+										<div id="jitsi-container" style="width: 100%; height: 600px; background: #000; border-radius: 8px; position: relative;"></div>
 										<div class="mt-3">
-											<p><strong>Meeting Link:</strong> {{ $appointment->meeting_link }}</p>
+											<p><strong>Meeting Room:</strong> {{ $appointment->meeting_link }}</p>
 											<p><strong>Patient:</strong> {{ $appointment->patient->user->name }}</p>
+											<p class="text-muted small">
+												<i class="fa-solid fa-info-circle me-1"></i>
+												Share this meeting link with the patient: <code>{{ $appointment->meeting_link }}</code>
+											</p>
 										</div>
 									</div>
+								</div>
+								@elseif($appointment->status == 'confirmed' && !$appointment->meeting_link)
+								<div class="alert alert-warning">
+									<i class="fa-solid fa-exclamation-triangle me-2"></i>
+									Meeting link is being generated. Please refresh the page.
 								</div>
 								@endif
 
@@ -185,8 +199,60 @@
 											</div>
 										</div>
 										<div class="create-details-card-body">
-											<form action="{{ route('psychologist.prescriptions.store', $appointment) }}" method="POST">
+											<form action="{{ route('psychologist.session.save-notes', $appointment) }}" method="POST" id="session-notes-form">
 												@csrf
+												<div class="start-appointment-set">
+													<div class="form-bg-title">
+														<h5>Session Notes</h5>
+													</div>
+													<div class="row">
+														<div class="col-md-12">
+															<div class="input-block input-block-new">
+																<label class="form-label">Session Notes <span class="text-muted">(Key details and observations)</span></label>
+																<textarea name="session_notes" class="form-control" rows="4" placeholder="Record key details, observations, and important points from the session...">{{ $appointment->session_notes ?? '' }}</textarea>
+															</div>
+														</div>
+													</div>
+												</div>
+												<div class="start-appointment-set">
+													<div class="form-bg-title">
+														<h5>Diagnosis</h5>
+													</div>
+													<div class="row">
+														<div class="col-md-12">
+															<div class="input-block input-block-new">
+																<label class="form-label">Diagnosis</label>
+																<textarea name="diagnosis" class="form-control" rows="3" placeholder="Enter diagnosis...">{{ $appointment->diagnosis ?? '' }}</textarea>
+															</div>
+														</div>
+													</div>
+												</div>
+												<div class="start-appointment-set">
+													<div class="form-bg-title">
+														<h5>Observations</h5>
+													</div>
+													<div class="row">
+														<div class="col-md-12">
+															<div class="input-block input-block-new">
+																<label class="form-label">Clinical Observations</label>
+																<textarea name="observations" class="form-control" rows="3" placeholder="Record clinical observations...">{{ $appointment->observations ?? '' }}</textarea>
+															</div>
+														</div>
+													</div>
+												</div>
+												<div class="start-appointment-set">
+													<div class="form-bg-title">
+														<h5>Follow-up Recommendations</h5>
+													</div>
+													<div class="row">
+														<div class="col-md-12">
+															<div class="input-block input-block-new">
+																<label class="form-label">Follow-up Recommendations</label>
+																<textarea name="follow_up_recommendations" class="form-control" rows="3" placeholder="Enter follow-up recommendations...">{{ $appointment->follow_up_recommendations ?? '' }}</textarea>
+															</div>
+														</div>
+													</div>
+												</div>
 												<div class="start-appointment-set">
 													<div class="form-bg-title">
 														<h5>Vitals</h5>
@@ -417,40 +483,22 @@
 														</div>
 													</div>
 												</div>
-												<div class="start-appointment-set">
-													<div class="form-bg-title">
-														<h5>Advice</h5>
-													</div>
-													<div class="row">
-														<div class="col-md-12">
-															<div class="input-block input-block-new">
-																<textarea name="advice" class="form-control" rows="3" placeholder="Advice for patient"></textarea>
-															</div>
-														</div>
-													</div>
-												</div>
-												<div class="start-appointment-set">
-													<div class="form-bg-title">
-														<h5>Follow Up</h5>
-													</div>
-													<div class="row">
-														<div class="col-md-12">
-															<div class="input-block input-block-new">
-																<textarea name="follow_up" class="form-control" rows="3" placeholder="Follow up instructions"></textarea>
-															</div>
-														</div>
-													</div>
-												</div>
 												<div class="col-md-12">
 													<div class="form-set-button">
 														<a href="{{ route('psychologist.appointments.index') }}" class="btn btn-light">Cancel</a>
-														<button class="btn btn-primary" type="submit">Save Notes</button>
+														<button class="btn btn-primary" type="submit" form="session-notes-form">Save Notes</button>
 														@if($appointment->status == 'confirmed')
-														<a href="{{ route('psychologist.sessions.end', $appointment) }}" class="btn btn-danger" onclick="return confirm('Are you sure you want to end this session?')">End Session</a>
+														<button type="button" class="btn btn-danger" onclick="endSession()">End Session</button>
 														@endif
 													</div>
 												</div>
 											</form>
+											
+											@if($appointment->status == 'confirmed')
+											<form action="{{ route('psychologist.session.end', $appointment) }}" method="POST" id="end-session-form" style="display: none;">
+												@csrf
+											</form>
+											@endif
 										</div>
 									</div>
 								</div>
@@ -466,59 +514,159 @@
 @if($appointment->status == 'confirmed' && $appointment->meeting_link)
 @push('scripts')
 <!-- Jitsi Meet External API -->
-<script src="https://8x8.vc/external_api.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const domain = 'meet.jit.si';
-        const options = {
-            roomName: '{{ $appointment->meeting_link }}',
-            width: '100%',
-            height: 500,
-            parentNode: document.querySelector('#jitsi-container'),
-            configOverwrite: {
-                startWithAudioMuted: false,
-                startWithVideoMuted: false,
-                enableNoAudioDetection: true,
-                enableNoisyMicDetection: true,
-                // Force video to be enabled - no audio-only mode
-                disableAudio: false,
-                disableVideo: false,
-                constraints: {
-                    video: {
-                        height: { ideal: 720, max: 1080, min: 240 },
-                        width: { ideal: 1280, max: 1920, min: 320 }
-                    }
-                }
-            },
-            interfaceConfigOverwrite: {
-                TOOLBAR_BUTTONS: [
-                    'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
-                    'fodeviceselection', 'hangup', 'chat', 'settings', 'videoquality',
-                    'filmstrip', 'feedback', 'stats', 'shortcuts', 'tileview'
-                ],
-                SETTINGS_SECTIONS: ['devices', 'language', 'moderator', 'profile'],
-                DEFAULT_BACKGROUND: '#474747',
-                INITIAL_TOOLBAR_TIMEOUT: 20000,
-                TOOLBAR_TIMEOUT: 4000
-            },
-            userInfo: {
-                displayName: '{{ Auth::user()->name }}',
-                email: '{{ Auth::user()->email }}'
+    (function() {
+        // Load Jitsi script dynamically
+        const script = document.createElement('script');
+        script.src = 'https://meet.jit.si/external_api.js';
+        script.async = true;
+        script.onload = function() {
+            initJitsi();
+        };
+        script.onerror = function() {
+            const container = document.querySelector('#jitsi-container');
+            if (container) {
+                container.innerHTML = '<div class="alert alert-danger p-4 text-center"><h5>Failed to Load Video Meeting</h5><p>Could not load Jitsi Meet. Please check your internet connection and try again.</p><button onclick="location.reload()" class="btn btn-primary mt-2">Reload Page</button></div>';
             }
         };
+        document.head.appendChild(script);
 
-        const api = new JitsiMeetExternalAPI(domain, options);
+        function initJitsi() {
+            const container = document.querySelector('#jitsi-container');
+            
+            if (!container) {
+                console.error('Jitsi container not found');
+                return;
+            }
 
-        api.addEventListener('videoConferenceJoined', function() {
-            console.log('Psychologist joined video conference');
+            // Check if JitsiMeetExternalAPI is loaded
+            if (typeof JitsiMeetExternalAPI === 'undefined') {
+                console.error('Jitsi Meet External API not loaded');
+                container.innerHTML = '<div class="alert alert-danger p-4 text-center"><h5>Failed to Load Video Meeting</h5><p>Jitsi Meet API could not be loaded. Please check your internet connection and try again.</p><button onclick="location.reload()" class="btn btn-primary mt-2">Reload Page</button></div>';
+                return;
+            }
+
+            const domain = 'meet.jit.si';
+            const roomName = '{{ $appointment->meeting_link }}';
+            
+            console.log('Initializing Jitsi Meet for room:', roomName);
+            
+            const options = {
+                roomName: roomName,
+                width: '100%',
+                height: 600,
+                parentNode: container,
+                configOverwrite: {
+                    startWithAudioMuted: false,
+                    startWithVideoMuted: false,
+                    enableNoAudioDetection: true,
+                    enableNoisyMicDetection: true,
+                    disableAudio: false,
+                    disableVideo: false,
+                    constraints: {
+                        video: {
+                            height: { ideal: 720, max: 1080, min: 240 },
+                            width: { ideal: 1280, max: 1920, min: 320 }
+                        }
+                    },
+                    enableLayerSuspension: true,
+                    resolution: 720,
+                    disableAP: false,
+                    enableNoisyMicDetection: true,
+                    enableTalkWhileMuted: false,
+                    useStunTurn: true
+                },
+                interfaceConfigOverwrite: {
+                    TOOLBAR_BUTTONS: [
+                        'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
+                        'fodeviceselection', 'hangup', 'chat', 'settings', 'videoquality',
+                        'filmstrip', 'feedback', 'stats', 'shortcuts', 'tileview', 'raisehand'
+                    ],
+                    SETTINGS_SECTIONS: ['devices', 'language', 'moderator', 'profile'],
+                    DEFAULT_BACKGROUND: '#474747',
+                    INITIAL_TOOLBAR_TIMEOUT: 20000,
+                    TOOLBAR_TIMEOUT: 4000,
+                    HIDE_INVITE_MORE_HEADER: false,
+                    SHOW_JITSI_WATERMARK: true,
+                    SHOW_WATERMARK_FOR_GUESTS: true
+                },
+                userInfo: {
+                    displayName: '{{ Auth::user()->name }} (Psychologist)',
+                    email: '{{ Auth::user()->email }}'
+                }
+            };
+
+            try {
+                const api = new JitsiMeetExternalAPI(domain, options);
+                
+                // Store API globally for cleanup
+                window.jitsiApi = api;
+
+                api.addEventListener('videoConferenceJoined', function(event) {
+                    console.log('Psychologist joined video conference', event);
+                });
+
+                api.addEventListener('participantJoined', function(event) {
+                    console.log('Participant joined:', event);
+                });
+
+                api.addEventListener('participantLeft', function(event) {
+                    console.log('Participant left:', event);
+                });
+
+                api.addEventListener('readyToClose', function() {
+                    console.log('Meeting ended');
+                    api.dispose();
+                });
+
+                api.addEventListener('videoConferenceLeft', function() {
+                    console.log('Left video conference');
+                });
+
+                api.addEventListener('error', function(error) {
+                    console.error('Jitsi error:', error);
+                });
+
+            } catch (error) {
+                console.error('Failed to initialize Jitsi Meet:', error);
+                container.innerHTML = '<div class="alert alert-danger p-4 text-center"><h5>Failed to Load Video Meeting</h5><p>Error: ' + (error.message || 'Unknown error') + '</p><p>Please check your internet connection and try again.</p><button onclick="location.reload()" class="btn btn-primary mt-2">Reload Page</button></div>';
+            }
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            if (window.jitsiApi) {
+                window.jitsiApi.dispose();
+            }
         });
-
-        api.addEventListener('readyToClose', function() {
-            console.log('Meeting ended');
-        });
-    });
+    })();
 </script>
 @endpush
 @endif
+
+@push('scripts')
+<script>
+    function endSession() {
+        if (confirm('Are you sure you want to end this session? All unsaved notes will be lost.')) {
+            // Copy form data to end session form
+            const formData = new FormData(document.getElementById('session-notes-form'));
+            const endForm = document.getElementById('end-session-form');
+            
+            // Add session notes data to end form
+            for (let [key, value] of formData.entries()) {
+                if (key !== '_token') {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = key;
+                    input.value = value;
+                    endForm.appendChild(input);
+                }
+            }
+            
+            endForm.submit();
+        }
+    }
+</script>
+@endpush
    
     @endsection

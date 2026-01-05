@@ -26,15 +26,42 @@
                     <div class="card">
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table class="datatable table table-hover table-center mb-0" id="specialities_data">
+                                <table class="table table-hover table-center mb-0">
                                     <thead>
                                         <tr>
                                             <th>#</th>
                                             <th>Specialities</th>
+                                            <th>Number of Psychologists</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody></tbody>
+                                    <tbody>
+                                        @forelse($specialities ?? [] as $speciality)
+                                        <tr>
+                                            <td>{{ $speciality['code'] }}</td>
+                                            <td>
+                                                <h2 class="table-avatar">
+                                                    <a href="#" class="avatar avatar-sm me-2">
+                                                        <img class="avatar-img rounded-circle" src="{{ asset('assets_admin/img/specialities/specialities-01.png') }}" alt="Speciality">
+                                                    </a>
+                                                    <a href="#">{{ $speciality['specialization'] }}</a>
+                                                </h2>
+                                            </td>
+                                            <td>{{ $speciality['count'] }} Psychologist(s)</td>
+                                            <td>
+                                                <div class="actions">
+                                                    <a href="{{ route('admin.psychologists.index', ['specialization' => $speciality['specialization']]) }}" class="btn btn-sm bg-info-light me-2">
+                                                        <i class="fe fe-eye"></i> View
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        @empty
+                                        <tr>
+                                            <td colspan="4" class="text-center">No specialities found</td>
+                                        </tr>
+                                        @endforelse
+                                    </tbody>
                                 </table>
                             </div>
                         </div>

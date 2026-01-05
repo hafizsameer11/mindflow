@@ -22,6 +22,8 @@ class PatientAppointmentController extends Controller
     {
         $patient = Auth::user()->patient;
         
+        $baseQuery = Appointment::where('patient_id', $patient->id);
+        
         $query = Appointment::with('psychologist.user')
             ->where('patient_id', $patient->id);
 
@@ -31,7 +33,16 @@ class PatientAppointmentController extends Controller
 
         $appointments = $query->latest()->paginate(15);
         
-        return view('patient-appointments', compact('appointments'));
+        // Get counts for each status
+        $stats = [
+            'pending' => (clone $baseQuery)->where('status', 'pending')->count(),
+            'confirmed' => (clone $baseQuery)->where('status', 'confirmed')
+                ->where('appointment_date', '>=', today())->count(),
+            'completed' => (clone $baseQuery)->where('status', 'completed')->count(),
+            'cancelled' => (clone $baseQuery)->where('status', 'cancelled')->count(),
+        ];
+        
+        return view('patient-appointments', compact('appointments', 'stats'));
     }
 
     public function create(Psychologist $psychologist)
@@ -40,11 +51,30 @@ class PatientAppointmentController extends Controller
             abort(404);
         }
 
+        // Load psychologist with user relationship
+        $psychologist->load('user');
+
+        // Get availabilities grouped by day
         $availabilities = PsychologistAvailability::where('psychologist_id', $psychologist->id)
             ->where('is_available', true)
-            ->get();
+            ->orderBy('day_of_week')
+            ->orderBy('start_time')
+            ->get()
+            ->groupBy('day_of_week');
 
-        return view('booking', compact('psychologist', 'availabilities'));
+        // Get existing appointments to check for booked slots
+        $existingAppointments = Appointment::where('psychologist_id', $psychologist->id)
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->where('appointment_date', '>=', today())
+            ->get()
+            ->map(function($apt) {
+                return [
+                    'date' => $apt->appointment_date->format('Y-m-d'),
+                    'time' => $apt->appointment_time,
+                ];
+            });
+
+        return view('booking', compact('psychologist', 'availabilities', 'existingAppointments'));
     }
 
     public function store(Request $request, Psychologist $psychologist)

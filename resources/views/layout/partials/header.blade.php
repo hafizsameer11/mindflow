@@ -406,12 +406,12 @@
                 @if (!Route::is(['index-4']))
                     <li>
 
-                        <a href="#"
+                        <a href="{{ url('signup') }}"
                             class="btn btn-md btn-primary-gradient d-inline-flex align-items-center rounded-pill"><i
                                 class="isax isax-lock-1 me-1"></i>Sign Up</a>
                     </li>
                     <li>
-                        <a href="#" class="btn btn-md btn-dark d-inline-flex align-items-center rounded-pill">
+                        <a href="{{ url('register') }}" class="btn btn-md btn-dark d-inline-flex align-items-center rounded-pill">
                             <i class="isax isax-user-tick me-1"></i>Register
                         </a>
                     </li>
@@ -747,82 +747,99 @@
                 </li>
 
                 <!-- Notifications -->
+                @auth
+                @php
+                    $headerNotifications = Auth::user()->notifications()
+                        ->where('type', 'App\Notifications\AdminAnnouncementNotification')
+                        ->latest()
+                        ->take(5)
+                        ->get();
+                    $headerUnreadCount = Auth::user()->unreadNotifications()
+                        ->where('type', 'App\Notifications\AdminAnnouncementNotification')
+                        ->count();
+                @endphp
                 <li class="nav-item dropdown noti-nav me-3 pe-0">
-                    <a href="#" class="dropdown-toggle active-dot active-dot-danger nav-link p-0"
+                    <a href="#" class="dropdown-toggle {{ $headerUnreadCount > 0 ? 'active-dot active-dot-danger' : '' }} nav-link p-0"
                         data-bs-toggle="dropdown">
                         <i class="isax isax-notification-bing"></i>
+                        @if($headerUnreadCount > 0)
+                            <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle" style="font-size: 10px; padding: 2px 5px;">{{ $headerUnreadCount > 9 ? '9+' : $headerUnreadCount }}</span>
+                        @endif
                     </a>
-                    <div class="dropdown-menu notifications dropdown-menu-end ">
+                    <div class="dropdown-menu notifications dropdown-menu-end">
+                        <div class="topnav-dropdown-header">
+                            <span class="notification-title">Notifications</span>
+                            @if($headerUnreadCount > 0)
+                                <a href="javascript:void(0)" class="clear-noti" onclick="markAllAsRead()">Mark All as Read</a>
+                            @endif
+                        </div>
+                        <div class="noti-content">
+                            <ul class="notification-list">
+                                @forelse($headerNotifications as $notification)
+                                    @php
+                                        $data = $notification->data;
+                                        $isRead = !is_null($notification->read_at);
+                                    @endphp
+                                    <li class="notification-message {{ !$isRead ? 'unread' : '' }}">
+                                        <a href="javascript:void(0)" onclick="markAsRead('{{ $notification->id }}')">
+                                            <div class="notify-block d-flex">
+                                                <span class="avatar">
+                                                    <i class="fa-solid fa-bullhorn" style="font-size: 20px; padding: 8px;"></i>
+                                                </span>
+                                                <div class="media-body">
+                                                    <h6>
+                                                        {{ $data['title'] ?? 'Announcement' }}
+                                                        <span class="notification-time">{{ $notification->created_at->diffForHumans() }}</span>
+                                                    </h6>
+                                                    <p class="noti-details">{{ Str::limit($data['message'] ?? '', 60) }}</p>
+                                                    @if(isset($data['priority']) && in_array($data['priority'], ['urgent', 'high']))
+                                                        <span class="badge bg-{{ $data['priority'] == 'urgent' ? 'danger' : 'warning' }} badge-sm">{{ ucfirst($data['priority']) }}</span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </li>
+                                @empty
+                                    <li class="notification-message">
+                                        <div class="notify-block d-flex">
+                                            <div class="media-body text-center py-3">
+                                                <p class="text-muted mb-0">No notifications</p>
+                                            </div>
+                                        </div>
+                                    </li>
+                                @endforelse
+                            </ul>
+                        </div>
+                        @if($headerNotifications->count() > 0)
+                            <div class="topnav-dropdown-footer text-center">
+                                <a href="{{ Auth::user()->isPatient() ? route('patient.dashboard') : (Auth::user()->isPsychologist() ? route('psychologist.dashboard') : '#') }}">View All</a>
+                            </div>
+                        @endif
+                    </div>
+                </li>
+                @else
+                <li class="nav-item dropdown noti-nav me-3 pe-0">
+                    <a href="#" class="dropdown-toggle nav-link p-0" data-bs-toggle="dropdown">
+                        <i class="isax isax-notification-bing"></i>
+                    </a>
+                    <div class="dropdown-menu notifications dropdown-menu-end">
                         <div class="topnav-dropdown-header">
                             <span class="notification-title">Notifications</span>
                         </div>
                         <div class="noti-content">
                             <ul class="notification-list">
                                 <li class="notification-message">
-                                    <a href="#">
-                                        <div class="notify-block d-flex">
-                                            <span class="avatar">
-                                                <img class="avatar-img" alt="Ruby perin"
-                                                    src="{{ URL::asset('assets/img/clients/client-01.jpg') }}">
-                                            </span>
-                                            <div class="media-body">
-                                                <h6>Travis Tremble <span class="notification-time">18.30 PM</span></h6>
-                                                <p class="noti-details">Sent a amount of $210 for his Appointment <span
-                                                        class="noti-title">Dr.Ruby perin </span></p>
-                                            </div>
+                                    <div class="notify-block d-flex">
+                                        <div class="media-body text-center py-3">
+                                            <p class="text-muted mb-0">Please login to view notifications</p>
                                         </div>
-                                    </a>
-                                </li>
-                                <li class="notification-message">
-                                    <a href="#">
-                                        <div class="notify-block d-flex">
-                                            <span class="avatar">
-                                                <img class="avatar-img" alt="Hendry Watt"
-                                                    src="{{ URL::asset('assets/img/clients/client-02.jpg') }}">
-                                            </span>
-                                            <div class="media-body">
-                                                <h6>Travis Tremble <span class="notification-time">12 Min Ago</span>
-                                                </h6>
-                                                <p class="noti-details"> has booked her appointment to <span
-                                                        class="noti-title">Dr. Hendry Watt</span></p>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </li>
-                                <li class="notification-message">
-                                    <a href="#">
-                                        <div class="notify-block d-flex">
-                                            <div class="avatar">
-                                                <img class="avatar-img" alt="Maria Dyen"
-                                                    src="{{ URL::asset('assets/img/clients/client-03.jpg') }}">
-                                            </div>
-                                            <div class="media-body">
-                                                <h6>Travis Tremble <span class="notification-time">6 Min Ago</span>
-                                                </h6>
-                                                <p class="noti-details"> Sent a amount $210 for his Appointment <span
-                                                        class="noti-title">Dr.Maria Dyen</span></p>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </li>
-                                <li class="notification-message">
-                                    <a href="#">
-                                        <div class="notify-block d-flex">
-                                            <div class="avatar avatar-sm">
-                                                <img class="avatar-img" alt="client-image"
-                                                    src="{{ URL::asset('assets/img/clients/client-04.jpg') }}">
-                                            </div>
-                                            <div class="media-body">
-                                                <h6>Travis Tremble <span class="notification-time">8.30 AM</span></h6>
-                                                <p class="noti-details"> Send a message to his doctor</p>
-                                            </div>
-                                        </div>
-                                    </a>
+                                    </div>
                                 </li>
                             </ul>
                         </div>
                     </div>
                 </li>
+                @endauth
                 <!-- /Notifications -->
 
                 <!-- Messages -->
@@ -929,7 +946,10 @@
                         </div>
                         <a class="dropdown-item" href="{{ url('doctor-dashboard') }}">Dashboard</a>
                         <a class="dropdown-item" href="{{ url('doctor-profile-settings') }}">Profile Settings</a>
-                        <a class="dropdown-item" href="#">Logout</a>
+                        <form method="POST" action="{{ route('psychologist.logout') }}" class="d-inline">
+                            @csrf
+                            <button type="submit" class="dropdown-item border-0 bg-transparent text-start w-100" style="padding: 0.5rem 1rem;">Logout</button>
+                        </form>
                     </div>
                 </li>
                 <!-- /User Menu -->
@@ -989,82 +1009,101 @@
                 </li>
 
                 <!-- Notifications -->
+                @auth
+                @php
+                    if (!isset($headerNotifications)) {
+                        $headerNotifications = Auth::user()->notifications()
+                            ->where('type', 'App\Notifications\AdminAnnouncementNotification')
+                            ->latest()
+                            ->take(5)
+                            ->get();
+                        $headerUnreadCount = Auth::user()->unreadNotifications()
+                            ->where('type', 'App\Notifications\AdminAnnouncementNotification')
+                            ->count();
+                    }
+                @endphp
                 <li class="nav-item dropdown noti-nav me-3 pe-0">
-                    <a href="#" class="dropdown-toggle active-dot active-dot-danger nav-link p-0"
+                    <a href="#" class="dropdown-toggle {{ $headerUnreadCount > 0 ? 'active-dot active-dot-danger' : '' }} nav-link p-0"
                         data-bs-toggle="dropdown">
                         <i class="isax isax-notification-bing"></i>
+                        @if($headerUnreadCount > 0)
+                            <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle" style="font-size: 10px; padding: 2px 5px;">{{ $headerUnreadCount > 9 ? '9+' : $headerUnreadCount }}</span>
+                        @endif
                     </a>
-                    <div class="dropdown-menu notifications dropdown-menu-end ">
+                    <div class="dropdown-menu notifications dropdown-menu-end">
+                        <div class="topnav-dropdown-header">
+                            <span class="notification-title">Notifications</span>
+                            @if($headerUnreadCount > 0)
+                                <a href="javascript:void(0)" class="clear-noti" onclick="markAllAsRead()">Mark All as Read</a>
+                            @endif
+                        </div>
+                        <div class="noti-content">
+                            <ul class="notification-list">
+                                @forelse($headerNotifications as $notification)
+                                    @php
+                                        $data = $notification->data;
+                                        $isRead = !is_null($notification->read_at);
+                                    @endphp
+                                    <li class="notification-message {{ !$isRead ? 'unread' : '' }}">
+                                        <a href="javascript:void(0)" onclick="markAsRead('{{ $notification->id }}')">
+                                            <div class="notify-block d-flex">
+                                                <span class="avatar">
+                                                    <i class="fa-solid fa-bullhorn" style="font-size: 20px; padding: 8px;"></i>
+                                                </span>
+                                                <div class="media-body">
+                                                    <h6>
+                                                        {{ $data['title'] ?? 'Announcement' }}
+                                                        <span class="notification-time">{{ $notification->created_at->diffForHumans() }}</span>
+                                                    </h6>
+                                                    <p class="noti-details">{{ Str::limit($data['message'] ?? '', 60) }}</p>
+                                                    @if(isset($data['priority']) && in_array($data['priority'], ['urgent', 'high']))
+                                                        <span class="badge bg-{{ $data['priority'] == 'urgent' ? 'danger' : 'warning' }} badge-sm">{{ ucfirst($data['priority']) }}</span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </li>
+                                @empty
+                                    <li class="notification-message">
+                                        <div class="notify-block d-flex">
+                                            <div class="media-body text-center py-3">
+                                                <p class="text-muted mb-0">No notifications</p>
+                                            </div>
+                                        </div>
+                                    </li>
+                                @endforelse
+                            </ul>
+                        </div>
+                        @if($headerNotifications->count() > 0)
+                            <div class="topnav-dropdown-footer text-center">
+                                <a href="{{ Auth::user()->isPatient() ? route('patient.dashboard') : (Auth::user()->isPsychologist() ? route('psychologist.dashboard') : '#') }}">View All</a>
+                            </div>
+                        @endif
+                    </div>
+                </li>
+                @else
+                <li class="nav-item dropdown noti-nav me-3 pe-0">
+                    <a href="#" class="dropdown-toggle nav-link p-0" data-bs-toggle="dropdown">
+                        <i class="isax isax-notification-bing"></i>
+                    </a>
+                    <div class="dropdown-menu notifications dropdown-menu-end">
                         <div class="topnav-dropdown-header">
                             <span class="notification-title">Notifications</span>
                         </div>
                         <div class="noti-content">
                             <ul class="notification-list">
                                 <li class="notification-message">
-                                    <a href="#">
-                                        <div class="notify-block d-flex">
-                                            <span class="avatar">
-                                                <img class="avatar-img" alt="Ruby perin"
-                                                    src="{{ URL::asset('assets/img/clients/client-01.jpg') }}">
-                                            </span>
-                                            <div class="media-body">
-                                                <h6>Travis Tremble <span class="notification-time">18.30 PM</span></h6>
-                                                <p class="noti-details">Sent a amount of $210 for his Appointment <span
-                                                        class="noti-title">Dr.Ruby perin </span></p>
-                                            </div>
+                                    <div class="notify-block d-flex">
+                                        <div class="media-body text-center py-3">
+                                            <p class="text-muted mb-0">Please login to view notifications</p>
                                         </div>
-                                    </a>
-                                </li>
-                                <li class="notification-message">
-                                    <a href="#">
-                                        <div class="notify-block d-flex">
-                                            <span class="avatar">
-                                                <img class="avatar-img" alt="Hendry Watt"
-                                                    src="{{ URL::asset('assets/img/clients/client-02.jpg') }}">
-                                            </span>
-                                            <div class="media-body">
-                                                <h6>Travis Tremble <span class="notification-time">12 Min Ago</span>
-                                                </h6>
-                                                <p class="noti-details"> has booked her appointment to <span
-                                                        class="noti-title">Dr. Hendry Watt</span></p>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </li>
-                                <li class="notification-message">
-                                    <a href="#">
-                                        <div class="notify-block d-flex">
-                                            <div class="avatar">
-                                                <img class="avatar-img" alt="Maria Dyen"
-                                                    src="{{ URL::asset('assets/img/clients/client-03.jpg') }}">
-                                            </div>
-                                            <div class="media-body">
-                                                <h6>Travis Tremble <span class="notification-time">6 Min Ago</span>
-                                                </h6>
-                                                <p class="noti-details"> Sent a amount $210 for his Appointment <span
-                                                        class="noti-title">Dr.Maria Dyen</span></p>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </li>
-                                <li class="notification-message">
-                                    <a href="#">
-                                        <div class="notify-block d-flex">
-                                            <div class="avatar avatar-sm">
-                                                <img class="avatar-img" alt="client-image"
-                                                    src="{{ URL::asset('assets/img/clients/client-04.jpg') }}">
-                                            </div>
-                                            <div class="media-body">
-                                                <h6>Travis Tremble <span class="notification-time">8.30 AM</span></h6>
-                                                <p class="noti-details"> Send a message to his doctor</p>
-                                            </div>
-                                        </div>
-                                    </a>
+                                    </div>
                                 </li>
                             </ul>
                         </div>
                     </div>
                 </li>
+                @endauth
                 <!-- /Notifications -->
 
                 <!-- Messages -->

@@ -39,7 +39,7 @@ class PsychologistSessionController extends Controller
         return view('doctor-appointment-start', compact('appointment'));
     }
 
-    public function end(Appointment $appointment)
+    public function end(Request $request, Appointment $appointment)
     {
         $psychologist = Auth::user()->psychologist;
 
@@ -47,9 +47,47 @@ class PsychologistSessionController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        $appointment->update(['status' => 'completed']);
+        $request->validate([
+            'session_notes' => 'nullable|string|max:5000',
+            'diagnosis' => 'nullable|string|max:2000',
+            'observations' => 'nullable|string|max:3000',
+            'follow_up_recommendations' => 'nullable|string|max:2000',
+        ]);
+
+        $appointment->update([
+            'status' => 'completed',
+            'session_notes' => $request->session_notes,
+            'diagnosis' => $request->diagnosis,
+            'observations' => $request->observations,
+            'follow_up_recommendations' => $request->follow_up_recommendations,
+        ]);
 
         return redirect()->route('psychologist.appointments.show', $appointment)
-            ->withSuccess('Session ended successfully.');
+            ->withSuccess('Session ended and notes saved successfully.');
+    }
+
+    public function saveNotes(Request $request, Appointment $appointment)
+    {
+        $psychologist = Auth::user()->psychologist;
+
+        if ($appointment->psychologist_id !== $psychologist->id) {
+            abort(403, 'Unauthorized');
+        }
+
+        $request->validate([
+            'session_notes' => 'nullable|string|max:5000',
+            'diagnosis' => 'nullable|string|max:2000',
+            'observations' => 'nullable|string|max:3000',
+            'follow_up_recommendations' => 'nullable|string|max:2000',
+        ]);
+
+        $appointment->update([
+            'session_notes' => $request->session_notes,
+            'diagnosis' => $request->diagnosis,
+            'observations' => $request->observations,
+            'follow_up_recommendations' => $request->follow_up_recommendations,
+        ]);
+
+        return redirect()->back()->withSuccess('Session notes saved successfully.');
     }
 }

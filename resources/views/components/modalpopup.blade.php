@@ -1092,42 +1092,67 @@
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
-            <form action="{{url('medical-details')}}">
+            <form action="{{ route('medical-details.store') }}" method="POST">
+                @csrf
                 <div class="modal-body pb-0">
                     <div class="timing-modal">
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">BMI <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control">
+                                    <label class="form-label">BMI</label>
+                                    <input type="text" name="bmi" class="form-control" placeholder="e.g., 20.1 kg/m2">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">Heart Rate <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control">
+                                    <label class="form-label">Heart Rate</label>
+                                    <input type="text" name="heart_rate" class="form-control" placeholder="e.g., 140 Bpm">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">Weight <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control">
+                                    <label class="form-label">Weight</label>
+                                    <input type="text" name="weight" class="form-control" placeholder="e.g., 70 kg">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">FBC <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control">
+                                    <label class="form-label">FBC</label>
+                                    <input type="text" name="fbc" class="form-control" placeholder="e.g., 70 - 90">
                                 </div>
                             </div>
-                            <div class="col-md-12">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Blood Pressure</label>
+                                    <input type="text" name="blood_pressure" class="form-control" placeholder="e.g., 120/80 mmHg">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Glucose Level</label>
+                                    <input type="text" name="glucose_level" class="form-control" placeholder="e.g., 90 mg/dl">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Body Temperature</label>
+                                    <input type="text" name="body_temperature" class="form-control" placeholder="e.g., 37.5°C">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="col-form-label">Date <span class="text-danger">*</span></label>
                                     <div class="form-icon">
-                                        <input type="text" class="form-control datetimepicker" placeholder="dd/mm/yyyy">
+                                        <input type="date" name="recorded_date" class="form-control" required>
                                         <span class="icon"><i class="isax isax-calendar-1"></i></span>
                                     </div>
                                 </div>	
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Notes</label>
+                                    <textarea name="notes" class="form-control" rows="3" placeholder="Additional notes..."></textarea>
+                                </div>
                             </div>
                         </div>	
                     </div>

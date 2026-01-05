@@ -19,26 +19,13 @@
                             <div class="login-header">
                                 <h3>Patient Register <a href="{{url('doctor-register')}}">Are you a Doctor?</a></h3>
                             </div>
-                            <form action="{{url('patient-register-step1')}}">
-                                <div class="mb-3">
-                                    <label class="form-label">Name</label>
-                                    <input type="text" class="form-control">
-                                </div>
+                            <form method="GET" action="{{url('patient-register-step1')}}">
                                 <div class="mb-3">
                                     <label class="form-label">Phone</label>
-                                    <input class="form-control form-control-lg group_formcontrol form-control-phone" id="phone" name="phone" type="text">
+                                    <input class="form-control form-control-lg group_formcontrol form-control-phone" id="phone" name="phone" type="text" value="{{ old('phone') }}">
                                 </div>
                                 <div class="mb-3">
-                                    <div class="form-group-flex">
-                                        <label class="form-label">Create Password</label>
-                                    </div>
-                                    <div class="pass-group">
-                                        <input type="password" class="form-control pass-input">
-                                        <span class="feather-eye-off toggle-password"></span>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <button class="btn btn-primary-gradient w-100" type="submit">Sign Up</button>
+                                    <button class="btn btn-primary-gradient w-100" type="submit">Continue Registration</button>
                                 </div>
                                 <div class="login-or">
                                     <span class="or-line"></span>

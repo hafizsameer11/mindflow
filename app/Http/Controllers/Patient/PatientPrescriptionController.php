@@ -22,7 +22,7 @@ class PatientPrescriptionController extends Controller
         $prescriptions = Prescription::with(['appointment.psychologist.user'])
             ->where('patient_id', $patient->id)
             ->latest()
-            ->paginate(15);
+            ->get();
 
         return view('patient.prescriptions.index', compact('prescriptions'));
     }

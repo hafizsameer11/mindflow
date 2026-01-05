@@ -17,6 +17,7 @@ class Psychologist extends Model
         'qualifications',
         'verification_status',
         'verified_at',
+        'rejection_reason',
     ];
 
     protected $casts = [

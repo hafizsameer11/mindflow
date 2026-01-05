@@ -43,6 +43,17 @@ class NotificationService
         );
     }
 
+    public function notifyAppointmentRescheduled(Appointment $appointment, $oldDate, $oldTime): void
+    {
+        $appointment->patient->user->notify(
+            new AppointmentNotification($appointment, 'rescheduled')
+        );
+
+        $appointment->psychologist->user->notify(
+            new AppointmentNotification($appointment, 'rescheduled')
+        );
+    }
+
     public function sendAppointmentReminders(): void
     {
         $tomorrow = Carbon::tomorrow();
@@ -95,6 +106,52 @@ class NotificationService
     {
         $psychologist->user->notify(
             new PsychologistVerificationNotification($psychologist, 'rejected')
+        );
+    }
+
+    public function notifyPaymentDisputed(Payment $payment): void
+    {
+        // Notify admin about payment dispute
+        $admins = \App\Models\User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new PaymentNotification($payment, 'disputed'));
+        }
+    }
+
+    public function notifyDisputeResolved(Payment $payment): void
+    {
+        $payment->appointment->patient->user->notify(
+            new PaymentNotification($payment, 'dispute_resolved')
+        );
+    }
+
+    public function notifyRefundRequested(Payment $payment): void
+    {
+        // Notify admin about refund request
+        $admins = \App\Models\User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new PaymentNotification($payment, 'refund_requested'));
+        }
+    }
+
+    public function notifyRefundApproved(Payment $payment): void
+    {
+        $payment->appointment->patient->user->notify(
+            new PaymentNotification($payment, 'refund_approved')
+        );
+    }
+
+    public function notifyRefundRejected(Payment $payment): void
+    {
+        $payment->appointment->patient->user->notify(
+            new PaymentNotification($payment, 'refund_rejected')
+        );
+    }
+
+    public function notifyRefundProcessed(Payment $payment): void
+    {
+        $payment->appointment->patient->user->notify(
+            new PaymentNotification($payment, 'refund_processed')
         );
     }
 }

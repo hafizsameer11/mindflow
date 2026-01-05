@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\CustomAuthController;
 use App\Http\Controllers\AuthCustomController;
 use App\Http\Controllers\Patient\AuthController as PatientAuthController;
@@ -24,11 +25,29 @@ use App\Http\Controllers\Admin\AdminAppointmentController;
 use App\Http\Controllers\Admin\AdminPaymentController;
 use App\Http\Controllers\Admin\AdminFeedbackController;
 use App\Http\Controllers\Admin\AdminReportController;
+use App\Http\Controllers\Admin\AdminNotificationController;
+use App\Http\Controllers\Admin\AdminBackupController;
 
 // Public Routes
 Route::get('/', function () {
     return view('index');
 })->name('index');
+
+// Debug route - REMOVE IN PRODUCTION
+Route::get('/test-user/{email}', function ($email) {
+    $user = \App\Models\User::where('email', $email)->first();
+    if ($user) {
+        return response()->json([
+            'found' => true,
+            'id' => $user->id,
+            'email' => $user->email,
+            'role' => $user->role,
+            'password_hash_length' => strlen($user->password),
+            'password_hash_prefix' => substr($user->password, 0, 20)
+        ]);
+    }
+    return response()->json(['found' => false, 'searched_email' => $email]);
+})->name('test.user');
 
 // Authentication Routes
 Route::get('admin/login', [CustomAuthController::class, 'index'])->name('admin.login');
@@ -47,11 +66,27 @@ Route::get('psychologist/register', [PsychologistAuthController::class, 'showReg
 Route::post('psychologist/register', [PsychologistAuthController::class, 'register'])->name('psychologist.register.post');
 Route::post('psychologist/logout', [PsychologistAuthController::class, 'logout'])->name('psychologist.logout');
 
+// Notification Routes (for all authenticated users)
+Route::middleware(['auth'])->group(function () {
+    Route::post('notifications/{notification}/read', function ($notificationId) {
+        $notification = Auth::user()->notifications()->findOrFail($notificationId);
+        $notification->markAsRead();
+        return response()->json(['success' => true]);
+    })->name('notifications.read');
+    
+    Route::post('notifications/mark-all-read', function () {
+        Auth::user()->unreadNotifications()->where('type', 'App\Notifications\AdminAnnouncementNotification')->update(['read_at' => now()]);
+        return response()->json(['success' => true]);
+    })->name('notifications.mark-all-read');
+});
+
 // Patient Routes
 Route::middleware(['auth', 'role:patient'])->prefix('patient')->name('patient.')->group(function () {
     Route::get('dashboard', [PatientController::class, 'dashboard'])->name('dashboard');
     Route::get('profile', [PatientController::class, 'profile'])->name('profile');
     Route::post('profile', [PatientController::class, 'updateProfile'])->name('profile.update');
+    Route::post('profile/password', [PatientController::class, 'updatePassword'])->name('profile.update-password');
+    Route::post('profile/preferences', [PatientController::class, 'updatePreferences'])->name('profile.update-preferences');
     
     Route::get('search', [PatientSearchController::class, 'index'])->name('search');
     Route::get('psychologist/{psychologist}', [PatientSearchController::class, 'show'])->name('psychologist.show');
@@ -65,12 +100,15 @@ Route::middleware(['auth', 'role:patient'])->prefix('patient')->name('patient.')
     Route::get('appointments/{appointment}/payment', [PatientPaymentController::class, 'create'])->name('payment.create');
     Route::post('appointments/{appointment}/payment', [PatientPaymentController::class, 'store'])->name('payment.store');
     Route::get('payments', [PatientPaymentController::class, 'index'])->name('payments.index');
+    Route::get('payments/{payment}/receipt', [PatientPaymentController::class, 'downloadReceipt'])->name('payments.receipt');
     
     Route::get('appointments/{appointment}/join', [PatientSessionController::class, 'join'])->name('session.join');
     
     Route::get('prescriptions', [PatientPrescriptionController::class, 'index'])->name('prescriptions.index');
     Route::get('prescriptions/{prescription}', [PatientPrescriptionController::class, 'show'])->name('prescriptions.show');
     
+    Route::get('feedback', [PatientFeedbackController::class, 'index'])->name('feedback.index');
+    Route::get('feedback/{feedback}', [PatientFeedbackController::class, 'show'])->name('feedback.show');
     Route::get('appointments/{appointment}/feedback', [PatientFeedbackController::class, 'create'])->name('feedback.create');
     Route::post('appointments/{appointment}/feedback', [PatientFeedbackController::class, 'store'])->name('feedback.store');
     Route::get('feedback/{feedback}/edit', [PatientFeedbackController::class, 'edit'])->name('feedback.edit');
@@ -82,6 +120,8 @@ Route::middleware(['auth', 'role:psychologist'])->prefix('psychologist')->name('
     Route::get('dashboard', [PsychologistController::class, 'dashboard'])->name('dashboard');
     Route::get('profile', [PsychologistController::class, 'profile'])->name('profile');
     Route::post('profile', [PsychologistController::class, 'updateProfile'])->name('profile.update');
+    Route::get('qualification/{index}', [PsychologistController::class, 'downloadQualification'])->name('qualification.download');
+    Route::get('qualification/{index}/view', [PsychologistController::class, 'viewQualification'])->name('qualification.view');
     Route::get('my-patients', [PsychologistController::class, 'myPatients'])->name('my-patients');
     
     Route::get('appointments', [PsychologistAppointmentController::class, 'index'])->name('appointments.index');
@@ -89,12 +129,18 @@ Route::middleware(['auth', 'role:psychologist'])->prefix('psychologist')->name('
     Route::post('appointments/{appointment}/confirm', [PsychologistAppointmentController::class, 'confirm'])->name('appointments.confirm');
     Route::post('appointments/{appointment}/cancel', [PsychologistAppointmentController::class, 'cancel'])->name('appointments.cancel');
     Route::post('appointments/{appointment}/reschedule', [PsychologistAppointmentController::class, 'reschedule'])->name('appointments.reschedule');
+    Route::post('payments/{payment}/verify', [PsychologistAppointmentController::class, 'verifyPayment'])->name('payments.verify');
+    Route::post('payments/{payment}/reject', [PsychologistAppointmentController::class, 'rejectPayment'])->name('payments.reject');
     
     Route::get('availability', [PsychologistAvailabilityController::class, 'index'])->name('availability.index');
     Route::post('availability', [PsychologistAvailabilityController::class, 'store'])->name('availability.store');
+    Route::post('availability/bulk', [PsychologistAvailabilityController::class, 'bulkStore'])->name('availability.bulk-store');
+    Route::post('availability/copy-day', [PsychologistAvailabilityController::class, 'copyDay'])->name('availability.copy-day');
+    Route::post('availability/delete-day', [PsychologistAvailabilityController::class, 'deleteDay'])->name('availability.delete-day');
     Route::put('availability/{availability}', [PsychologistAvailabilityController::class, 'update'])->name('availability.update');
     Route::delete('availability/{availability}', [PsychologistAvailabilityController::class, 'destroy'])->name('availability.destroy');
     
+    Route::get('prescriptions', [PsychologistPrescriptionController::class, 'index'])->name('prescriptions.index');
     Route::get('appointments/{appointment}/prescription/create', [PsychologistPrescriptionController::class, 'create'])->name('prescriptions.create');
     Route::post('appointments/{appointment}/prescription', [PsychologistPrescriptionController::class, 'store'])->name('prescriptions.store');
     Route::get('prescriptions/{prescription}/edit', [PsychologistPrescriptionController::class, 'edit'])->name('prescriptions.edit');
@@ -102,6 +148,12 @@ Route::middleware(['auth', 'role:psychologist'])->prefix('psychologist')->name('
     
     Route::get('appointments/{appointment}/start', [PsychologistSessionController::class, 'start'])->name('session.start');
     Route::post('appointments/{appointment}/end', [PsychologistSessionController::class, 'end'])->name('session.end');
+    Route::post('appointments/{appointment}/save-notes', [PsychologistSessionController::class, 'saveNotes'])->name('session.save-notes');
+    
+    Route::get('feedback', [\App\Http\Controllers\Psychologist\PsychologistFeedbackController::class, 'index'])->name('feedback.index');
+    Route::get('feedback/{feedback}', [\App\Http\Controllers\Psychologist\PsychologistFeedbackController::class, 'show'])->name('feedback.show');
+    
+    Route::get('earnings', [\App\Http\Controllers\Psychologist\PsychologistEarningsController::class, 'index'])->name('earnings.index');
 });
 
 // Admin Routes
@@ -109,13 +161,21 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('index_admin', [AdminController::class, 'dashboard'])->name('dashboard');
     
     Route::resource('users', AdminUserController::class);
+    Route::post('users/{user}/toggle-status', [AdminUserController::class, 'toggleStatus'])->name('users.toggle-status');
     Route::get('psychologists', [AdminPsychologistController::class, 'index'])->name('psychologists.index');
+    Route::get('doctor-list', [AdminPsychologistController::class, 'index'])->name('doctor-list'); // Alias for backward compatibility
+    Route::get('patient-list', [AdminController::class, 'patientList'])->name('patient-list');
+    Route::get('specialities', [AdminController::class, 'specialities'])->name('specialities');
+    Route::get('register', function() {
+        return view('admin.register');
+    })->name('register');
     Route::get('psychologists/{psychologist}', [AdminPsychologistController::class, 'show'])->name('psychologists.show');
     Route::post('psychologists/{psychologist}/verify', [AdminPsychologistController::class, 'verify'])->name('psychologists.verify');
     Route::post('psychologists/{psychologist}/reject', [AdminPsychologistController::class, 'reject'])->name('psychologists.reject');
     Route::delete('psychologists/{psychologist}', [AdminPsychologistController::class, 'destroy'])->name('psychologists.destroy');
     
     Route::get('appointments', [AdminAppointmentController::class, 'index'])->name('appointments.index');
+    Route::get('appointment-list', [AdminAppointmentController::class, 'index'])->name('appointment-list'); // Alias for backward compatibility
     Route::get('appointments/{appointment}', [AdminAppointmentController::class, 'show'])->name('appointments.show');
     
     Route::get('payments', [AdminPaymentController::class, 'index'])->name('payments.index');
@@ -124,13 +184,52 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('payments/{payment}/reject', [AdminPaymentController::class, 'reject'])->name('payments.reject');
     Route::get('payments/{payment}/receipt', [AdminPaymentController::class, 'downloadReceipt'])->name('payments.receipt');
     
+    // Dispute routes
+    Route::post('payments/{payment}/dispute', [AdminPaymentController::class, 'dispute'])->name('payments.dispute');
+    Route::post('payments/{payment}/resolve-dispute', [AdminPaymentController::class, 'resolveDispute'])->name('payments.resolve-dispute');
+    
+    // Refund routes
+    Route::post('payments/{payment}/request-refund', [AdminPaymentController::class, 'requestRefund'])->name('payments.request-refund');
+    Route::post('payments/{payment}/approve-refund', [AdminPaymentController::class, 'approveRefund'])->name('payments.approve-refund');
+    Route::post('payments/{payment}/reject-refund', [AdminPaymentController::class, 'rejectRefund'])->name('payments.reject-refund');
+    Route::post('payments/{payment}/process-refund', [AdminPaymentController::class, 'processRefund'])->name('payments.process-refund');
+    
     Route::get('feedbacks', [AdminFeedbackController::class, 'index'])->name('feedbacks.index');
+    Route::get('feedbacks/{feedback}', [AdminFeedbackController::class, 'show'])->name('feedbacks.show');
     Route::delete('feedbacks/{feedback}', [AdminFeedbackController::class, 'destroy'])->name('feedbacks.destroy');
+    
+    Route::get('reviews', [AdminFeedbackController::class, 'index'])->name('reviews'); // Alias for feedbacks
+    Route::get('transactions-list', [AdminPaymentController::class, 'index'])->name('transactions-list'); // Alias for payments
+    Route::get('invoice-report', [AdminReportController::class, 'invoiceReport'])->name('invoice-report');
+    
+    // Notification and Communication routes
+    Route::resource('notifications', AdminNotificationController::class)->parameters(['notifications' => 'announcement']);
+    Route::post('notifications/{announcement}/send', [AdminNotificationController::class, 'send'])->name('notifications.send');
+    Route::post('notifications/{announcement}/toggle-status', [AdminNotificationController::class, 'toggleStatus'])->name('notifications.toggle-status');
+    Route::get('profile', [AdminController::class, 'profile'])->name('profile');
+    Route::post('profile', [AdminController::class, 'updateProfile'])->name('profile.update');
+    Route::post('profile/password', [AdminController::class, 'updatePassword'])->name('profile.update-password');
+    Route::get('settings', [AdminController::class, 'settings'])->name('settings');
+    Route::get('forgot-password', function() {
+        return view('admin.forgot-password');
+    })->name('forgot-password');
+    Route::get('lock-screen', function() {
+        return view('admin.lock-screen');
+    })->name('lock-screen');
+    Route::get('blank-page', function() {
+        return view('admin.blank-page');
+    })->name('blank-page');
     
     Route::get('reports', [AdminReportController::class, 'index'])->name('reports.index');
     Route::get('reports/appointments', [AdminReportController::class, 'appointments'])->name('reports.appointments');
     Route::get('reports/payments', [AdminReportController::class, 'payments'])->name('reports.payments');
     Route::get('reports/users', [AdminReportController::class, 'users'])->name('reports.users');
+    Route::get('reports/trends', [AdminReportController::class, 'trends'])->name('reports.trends');
+
+    // Backup and Recovery routes
+    Route::resource('backups', AdminBackupController::class)->only(['index', 'store', 'destroy']);
+    Route::get('backups/{filename}/download', [AdminBackupController::class, 'download'])->name('backups.download');
+    Route::post('backups/{filename}/restore', [AdminBackupController::class, 'restore'])->name('backups.restore');
 });
 
 // Legacy routes (keeping for backward compatibility)
@@ -208,7 +307,7 @@ Route::get('/appointments', function () {
     return view('appointments');
 })->name('appointments');
 Route::get('/available-timings', function () {
-    return view('available-timings');
+    return redirect()->route('psychologist.availability.index');
 })->name('available-timings');
 Route::get('/blank-page', function () {
     return view('blank-page');
@@ -249,9 +348,6 @@ Route::get('/change-password', function () {
 Route::get('/chat-doctor', function () {
     return view('chat-doctor');
 })->name('chat-doctor');
-Route::get('/chat', function () {
-    return view('chat');
-})->name('chat');
 Route::get('/checkout', function () {
     return view('checkout');
 })->name('checkout');
@@ -267,9 +363,11 @@ Route::get('/consultation', function () {
 Route::get('/contact-us', function () {
     return view('contact-us');
 })->name('contact-us');
-Route::get('/dependent', function () {
-    return view('dependent');
-})->name('dependent');
+Route::get('/dependent', [App\Http\Controllers\Patient\PatientDependentController::class, 'index'])->name('dependent');
+Route::post('/dependent', [App\Http\Controllers\Patient\PatientDependentController::class, 'store'])->name('dependent.store');
+Route::put('/dependent/{dependent}', [App\Http\Controllers\Patient\PatientDependentController::class, 'update'])->name('dependent.update');
+Route::delete('/dependent/{dependent}', [App\Http\Controllers\Patient\PatientDependentController::class, 'destroy'])->name('dependent.destroy');
+Route::post('/dependent/{dependent}/toggle-status', [App\Http\Controllers\Patient\PatientDependentController::class, 'toggleStatus'])->name('dependent.toggle-status');
 Route::get('/doctor-add-blog', function () {
     return view('doctor-add-blog');
 })->name('doctor-add-blog');
@@ -279,9 +377,9 @@ Route::get('/doctor-blog', function () {
 Route::get('/doctor-change-password', function () {
     return view('doctor-change-password');
 })->name('doctor-change-password');
-Route::get('/doctor-dashboard', function () {
-    return view('doctor-dashboard');
-})->name('doctor-dashboard');
+Route::get('/doctor-dashboard', [PsychologistController::class, 'dashboard'])
+    ->middleware(['auth', 'role:psychologist'])
+    ->name('doctor-dashboard');
 Route::get('/doctor-pending-blog', function () {
     return view('doctor-pending-blog');
 })->name('doctor-pending-blog');
@@ -360,9 +458,6 @@ Route::get('/login-phone-otp', function () {
 Route::get('/login-phone', function () {
     return view('login-phone');
 })->name('login-phone');
-Route::get('/login', function () {
-    return view('login');
-})->name('login');
 Route::get('/maintenance', function () {
     return view('maintenance');
 })->name('maintenance');
@@ -372,9 +467,8 @@ Route::get('/map-grid', function () {
 Route::get('/map-list', function () {
     return view('map-list');
 })->name('map-list');
-Route::get('/medical-details', function () {
-    return view('medical-details');
-})->name('medical-details');
+Route::get('/medical-details', [App\Http\Controllers\Patient\PatientVitalController::class, 'index'])->name('medical-details');
+Route::post('/medical-details', [App\Http\Controllers\Patient\PatientVitalController::class, 'store'])->name('medical-details.store');
 Route::get('/medical-records', function () {
     return view('medical-records');
 })->name('medical-records');
@@ -530,7 +624,17 @@ Route::get('/product-healthcare', function () {
     return view('product-healthcare');
 })->name('product-healthcare');
 Route::get('/profile-settings', function () {
-    return view('profile-settings');
+    if (Auth::check()) {
+        $user = Auth::user();
+        if ($user->role === 'patient') {
+            return redirect()->route('patient.profile');
+        } elseif ($user->role === 'psychologist') {
+            return redirect()->route('psychologist.profile');
+        } elseif ($user->role === 'admin') {
+            return redirect()->route('admin.profile');
+        }
+    }
+    return redirect()->route('login');
 })->name('profile-settings');
 Route::get('/register', function () {
     return view('register');
@@ -631,9 +735,7 @@ Route::get('/patient-appointments', function () {
  Route::get('/patient-completed-appointment', function () {
     return view('patient-completed-appointment');
  })->name('patient-completed-appointment');
- Route::get('/patient-invoices', function () {
-    return view('patient-invoices');
- })->name('patient-invoices');
+Route::get('/patient-invoices', [App\Http\Controllers\Patient\PatientPaymentController::class, 'index'])->name('patient-invoices');
  Route::get('/patient-upcoming-appointment', function () {
     return view('patient-upcoming-appointment');
  })->name('patient-upcoming-appointment');

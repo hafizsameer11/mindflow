@@ -25,20 +25,36 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        $credentials = $request->only('email', 'password');
+        // Normalize email (trim whitespace)
+        $email = trim($request->email);
+        
+        // Try exact match first (most databases are case-insensitive by default)
+        $user = User::where('email', $email)->first();
+        
+        // If not found, try case-insensitive search
+        if (!$user) {
+            $user = User::whereRaw('LOWER(TRIM(email)) = LOWER(?)', [$email])->first();
+        }
+        
+        if (!$user) {
+            return redirect()->back()->withErrors(['email' => 'No account found with this email address.'])->withInput($request->only('email'));
+        }
+        
+        // Use the actual email from database for Auth::attempt
+        $credentials = [
+            'email' => $user->email,
+            'password' => $request->password
+        ];
+        
+        if (!$user->isPsychologist()) {
+            return redirect()->back()->withErrors(['email' => 'This account is not registered as a psychologist.'])->withInput($request->only('email'));
+        }
         
         if (Auth::attempt($credentials)) {
-            $user = Auth::user();
-            
-            if ($user->isPsychologist()) {
-                return redirect()->intended('psychologist/dashboard')->withSuccess('Signed in');
-            }
-            
-            Auth::logout();
-            return redirect()->back()->withErrors('Invalid credentials for psychologist access.');
+            return redirect()->intended('psychologist/dashboard')->withSuccess('Signed in');
         }
 
-        return redirect()->back()->withErrors('These credentials do not match our records.');
+        return redirect()->back()->withErrors(['email' => 'Invalid password. Please check your password and try again.'])->withInput($request->only('email'));
     }
 
     public function showRegistrationForm()
@@ -49,16 +65,25 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|min:5|max:30',
+            'name' => 'required|min:3|max:100',
             'email' => 'required|email|unique:users',
-            'password' => 'required|min:6|confirmed',
-            'phone' => 'nullable|string',
-            'specialization' => 'required|string',
-            'experience_years' => 'required|integer|min:0',
-            'consultation_fee' => 'required|numeric|min:0',
-            'bio' => 'nullable|string',
-            'qualifications' => 'nullable|array',
-            'qualification_files.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'password' => 'required|min:8|confirmed',
+            'phone' => 'nullable|string|max:20',
+            'date_of_birth' => 'nullable|date|before:today',
+            'gender' => 'nullable|in:male,female,other',
+            'address' => 'nullable|string|max:255',
+            'specialization' => 'required|string|max:255',
+            'experience_years' => 'required|integer|min:0|max:50',
+            'consultation_fee' => 'required|numeric|min:0|max:10000',
+            'bio' => 'nullable|string|max:2000',
+            'qualification_files' => 'required|array|min:1',
+            'qualification_files.*' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+        ], [
+            'qualification_files.required' => 'Please upload at least one certification file.',
+            'qualification_files.min' => 'Please upload at least one certification file.',
+            'qualification_files.*.required' => 'Each certification file is required.',
+            'qualification_files.*.mimes' => 'Certification files must be PDF, JPG, JPEG, or PNG format.',
+            'qualification_files.*.max' => 'Each certification file must not exceed 2MB.',
         ]);
 
         if ($validator->fails()) {
@@ -68,11 +93,12 @@ class AuthController extends Controller
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'password' => $request->password, // The 'hashed' cast in User model will automatically hash this
             'role' => 'psychologist',
             'phone' => $request->phone,
             'date_of_birth' => $request->date_of_birth,
             'gender' => $request->gender,
+            'address' => $request->address,
             'status' => 'active',
         ]);
 

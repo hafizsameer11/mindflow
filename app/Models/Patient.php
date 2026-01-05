@@ -33,4 +33,14 @@ class Patient extends Model
     {
         return $this->hasMany(Feedback::class);
     }
+
+    public function dependents(): HasMany
+    {
+        return $this->hasMany(Dependent::class);
+    }
+
+    public function vitals(): HasMany
+    {
+        return $this->hasMany(PatientVital::class);
+    }
 }

@@ -37,13 +37,13 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @forelse(\App\Models\Patient::with('user')->paginate(15) as $patient)
+                                        @forelse($patients ?? [] as $patient)
                                         <tr>
                                             <td>#PAT{{ str_pad($patient->id, 4, '0', STR_PAD_LEFT) }}</td>
                                             <td>
                                                 <h2 class="table-avatar">
                                                     <a href="#" class="avatar avatar-sm me-2">
-                                                        <img class="avatar-img rounded-circle" src="{{URL::asset('/assets_admin/img/patients/patient.jpg')}}" alt="User Image">
+                                                        <img class="avatar-img rounded-circle" src="{{ $patient->user->profile_image ? asset('storage/' . $patient->user->profile_image) : asset('assets_admin/img/patients/patient.jpg') }}" alt="User Image">
                                                     </a>
                                                     <a href="#">{{ $patient->user->name }}</a>
                                                 </h2>
@@ -58,18 +58,10 @@
                                             <td>{{ $patient->user->address ?? 'N/A' }}</td>
                                             <td>{{ $patient->user->phone ?? 'N/A' }}</td>
                                             <td>
-                                                @php
-                                                    $lastAppointment = \App\Models\Appointment::where('patient_id', $patient->id)
-                                                        ->where('status', 'completed')
-                                                        ->latest()
-                                                        ->first();
-                                                @endphp
-                                                {{ $lastAppointment ? $lastAppointment->appointment_date->format('M d, Y') : 'N/A' }}
+                                                {{ $patient->last_visit_date ? $patient->last_visit_date->format('M d, Y') : 'N/A' }}
                                             </td>
                                             <td class="text-end">
-                                                ${{ number_format(\App\Models\Payment::whereHas('appointment', function($q) use ($patient) {
-                                                    $q->where('patient_id', $patient->id);
-                                                })->where('status', 'verified')->sum('amount'), 2) }}
+                                                ${{ number_format($patient->total_paid ?? 0, 2) }}
                                             </td>
                                         </tr>
                                         @empty

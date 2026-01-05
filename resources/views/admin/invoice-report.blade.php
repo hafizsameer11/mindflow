@@ -23,7 +23,7 @@
                     <div class="card">
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table class="datatable table table-hover table-center mb-0" id="invoice_data">
+                                <table class="table table-hover table-center mb-0">
                                     <thead>
                                         <tr>
                                             <th>Invoice Number</th>
@@ -35,7 +35,38 @@
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody></tbody>
+                                    <tbody>
+                                        @forelse($payments ?? [] as $payment)
+                                        <tr>
+                                            <td>#INV{{ str_pad($payment->id, 4, '0', STR_PAD_LEFT) }}</td>
+                                            <td>#PAT{{ str_pad($payment->appointment->patient->id ?? 0, 4, '0', STR_PAD_LEFT) }}</td>
+                                            <td>
+                                                <h2 class="table-avatar">
+                                                    <a href="#" class="avatar avatar-sm me-2">
+                                                        <img class="avatar-img rounded-circle" src="{{ asset('assets_admin/img/patients/patient.jpg') }}" alt="User Image">
+                                                    </a>
+                                                    <a href="#">{{ $payment->appointment->patient->user->name ?? 'N/A' }}</a>
+                                                </h2>
+                                            </td>
+                                            <td>${{ number_format($payment->amount, 2) }}</td>
+                                            <td>{{ $payment->created_at->format('M d, Y') }}</td>
+                                            <td>
+                                                <span class="badge bg-{{ $payment->status === 'verified' ? 'success' : ($payment->status === 'rejected' ? 'danger' : 'warning') }}-light">
+                                                    {{ ucfirst(str_replace('_', ' ', $payment->status)) }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <a href="{{ route('admin.payments.show', $payment->id) }}" class="btn btn-sm bg-info-light">
+                                                    <i class="fe fe-eye"></i> View
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        @empty
+                                        <tr>
+                                            <td colspan="7" class="text-center">No invoices found</td>
+                                        </tr>
+                                        @endforelse
+                                    </tbody>
                                 </table>
                             </div>
                         </div>

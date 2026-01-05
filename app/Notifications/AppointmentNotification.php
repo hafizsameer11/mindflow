@@ -28,6 +28,7 @@ class AppointmentNotification extends Notification implements ShouldQueue
             'created' => 'Your appointment has been created successfully.',
             'confirmed' => 'Your appointment has been confirmed.',
             'cancelled' => 'Your appointment has been cancelled.',
+            'rescheduled' => 'Your appointment has been rescheduled.',
             'reminder' => 'Reminder: You have an appointment tomorrow.',
         ];
 

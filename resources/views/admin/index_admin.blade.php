@@ -152,91 +152,34 @@
                                         </tr>
                                     </thead>
                                     <tbody>
+                                        @forelse($top_psychologists ?? [] as $psychologist)
                                         <tr>
                                             <td>
                                                 <h2 class="table-avatar">
-                                                    <a href="{{url('admin/profile')}}" class="avatar avatar-sm me-2"><img class="avatar-img rounded-circle" src="{{URL::asset('/assets_admin/img/doctors/doctor-thumb-01.jpg')}}" alt="User Image"></a>
-                                                    <a href="{{url('admin/profile')}}">Dr. Ruby Perrin</a>
+                                                    <a href="{{ route('admin.psychologists.show', $psychologist->id) }}" class="avatar avatar-sm me-2">
+                                                        <img class="avatar-img rounded-circle" src="{{ $psychologist->user->profile_image ? asset('storage/' . $psychologist->user->profile_image) : asset('assets_admin/img/doctors/doctor-thumb-01.jpg') }}" alt="User Image">
+                                                    </a>
+                                                    <a href="{{ route('admin.psychologists.show', $psychologist->id) }}">{{ $psychologist->user->name }}</a>
                                                 </h2>
                                             </td>
-                                            <td>Dental</td>
-                                            <td>$3200.00</td>
+                                            <td>{{ $psychologist->specialization }}</td>
+                                            <td>${{ number_format($psychologist->total_earnings ?? 0, 2) }}</td>
                                             <td>
-                                                <i class="fe fe-star text-warning"></i>
-                                                <i class="fe fe-star text-warning"></i>
-                                                <i class="fe fe-star text-warning"></i>
-                                                <i class="fe fe-star text-warning"></i>
-                                                <i class="fe fe-star-o text-secondary"></i>
+                                                @for($i = 1; $i <= 5; $i++)
+                                                    @if($i <= floor($psychologist->average_rating ?? 0))
+                                                        <i class="fe fe-star text-warning"></i>
+                                                    @else
+                                                        <i class="fe fe-star-o text-secondary"></i>
+                                                    @endif
+                                                @endfor
+                                                <span class="ms-1">({{ number_format($psychologist->average_rating ?? 0, 1) }})</span>
                                             </td>
                                         </tr>
+                                        @empty
                                         <tr>
-                                            <td>
-                                                <h2 class="table-avatar">
-                                                    <a href="{{url('admin/profile')}}" class="avatar avatar-sm me-2"><img class="avatar-img rounded-circle" src="{{URL::asset('/assets_admin/img/doctors/doctor-thumb-02.jpg')}}" alt="User Image"></a>
-                                                    <a href="{{url('admin/profile')}}">Dr. Darren Elder</a>
-                                                </h2>
-                                            </td>
-                                            <td>Dental</td>
-                                            <td>$3100.00</td>
-                                            <td>
-                                                <i class="fe fe-star text-warning"></i>
-                                                <i class="fe fe-star text-warning"></i>
-                                                <i class="fe fe-star text-warning"></i>
-                                                <i class="fe fe-star text-warning"></i>
-                                                <i class="fe fe-star-o text-secondary"></i>
-                                            </td>
+                                            <td colspan="4" class="text-center">No psychologists found</td>
                                         </tr>
-                                        <tr>
-                                            <td>
-                                                <h2 class="table-avatar">
-                                                    <a href="{{url('admin/profile')}}" class="avatar avatar-sm me-2"><img class="avatar-img rounded-circle" src="{{URL::asset('/assets_admin/img/doctors/doctor-thumb-03.jpg')}}" alt="User Image"></a>
-                                                    <a href="{{url('admin/profile')}}">Dr. Deborah Angel</a>
-                                                </h2>
-                                            </td>
-                                            <td>Cardiology</td>
-                                            <td>$4000.00</td>
-                                            <td>
-                                                <i class="fe fe-star text-warning"></i>
-                                                <i class="fe fe-star text-warning"></i>
-                                                <i class="fe fe-star text-warning"></i>
-                                                <i class="fe fe-star text-warning"></i>
-                                                <i class="fe fe-star-o text-secondary"></i>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <h2 class="table-avatar">
-                                                    <a href="{{url('admin/profile')}}" class="avatar avatar-sm me-2"><img class="avatar-img rounded-circle" src="{{URL::asset('/assets_admin/img/doctors/doctor-thumb-04.jpg')}}" alt="User Image"></a>
-                                                    <a href="{{url('admin/profile')}}">Dr. Sofia Brient</a>
-                                                </h2>
-                                            </td>
-                                            <td>Urology</td>
-                                            <td>$3200.00</td>
-                                            <td>
-                                                <i class="fe fe-star text-warning"></i>
-                                                <i class="fe fe-star text-warning"></i>
-                                                <i class="fe fe-star text-warning"></i>
-                                                <i class="fe fe-star text-warning"></i>
-                                                <i class="fe fe-star-o text-secondary"></i>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <h2 class="table-avatar">
-                                                    <a href="{{url('admin/profile')}}" class="avatar avatar-sm me-2"><img class="avatar-img rounded-circle" src="{{URL::asset('/assets_admin/img/doctors/doctor-thumb-05.jpg')}}" alt="User Image"></a>
-                                                    <a href="{{url('admin/profile')}}">Dr. Marvin Campbell</a>
-                                                </h2>
-                                            </td>
-                                            <td>Orthopaedics</td>
-                                            <td>$3500.00</td>
-                                            <td>
-                                                <i class="fe fe-star text-warning"></i>
-                                                <i class="fe fe-star text-warning"></i>
-                                                <i class="fe fe-star text-warning"></i>
-                                                <i class="fe fe-star text-warning"></i>
-                                                <i class="fe fe-star-o text-secondary"></i>
-                                            </td>
-                                        </tr>
+                                        @endforelse
                                     </tbody>
                                 </table>
                             </div>
@@ -264,61 +207,25 @@
                                         </tr>
                                     </thead>
                                     <tbody>
+                                        @forelse($recent_patients ?? [] as $patient)
                                         <tr>
                                             <td>
                                                 <h2 class="table-avatar">
-                                                    <a href="{{url('admin/profile')}}" class="avatar avatar-sm me-2"><img class="avatar-img rounded-circle" src="{{URL::asset('/assets_admin/img/patients/patient1.jpg')}}" alt="User Image"></a>
-                                                    <a href="{{url('admin/profile')}}">Charlene Reed </a>
+                                                    <a href="#" class="avatar avatar-sm me-2">
+                                                        <img class="avatar-img rounded-circle" src="{{ $patient->user->profile_image ? asset('storage/' . $patient->user->profile_image) : asset('assets_admin/img/patients/patient1.jpg') }}" alt="User Image">
+                                                    </a>
+                                                    <a href="#">{{ $patient->user->name }}</a>
                                                 </h2>
                                             </td>
-                                            <td>8286329170</td>
-                                            <td>20 Oct 2023</td>
-                                            <td>$100.00</td>
+                                            <td>{{ $patient->user->phone ?? 'N/A' }}</td>
+                                            <td>{{ $patient->last_visit ? $patient->last_visit->format('d M Y') : 'N/A' }}</td>
+                                            <td>${{ number_format($patient->total_paid ?? 0, 2) }}</td>
                                         </tr>
+                                        @empty
                                         <tr>
-                                            <td>
-                                                <h2 class="table-avatar">
-                                                    <a href="{{url('admin/profile')}}" class="avatar avatar-sm me-2"><img class="avatar-img rounded-circle" src="{{URL::asset('/assets_admin/img/patients/patient2.jpg')}}" alt="User Image"></a>
-                                                    <a href="{{url('admin/profile')}}">Travis Trimble </a>
-                                                </h2>
-                                            </td>
-                                            <td>2077299974</td>
-                                            <td>22 Oct 2023</td>
-                                            <td>$200.00</td>
+                                            <td colspan="4" class="text-center">No patients found</td>
                                         </tr>
-                                        <tr>
-                                            <td>
-                                                <h2 class="table-avatar">
-                                                    <a href="{{url('admin/profile')}}" class="avatar avatar-sm me-2"><img class="avatar-img rounded-circle" src="{{URL::asset('/assets_admin/img/patients/patient3.jpg')}}" alt="User Image"></a>
-                                                    <a href="{{url('admin/profile')}}">Carl Kelly</a>
-                                                </h2>
-                                            </td>
-                                            <td>2607247769</td>
-                                            <td>21 Oct 2023</td>
-                                            <td>$250.00</td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <h2 class="table-avatar">
-                                                    <a href="{{url('admin/profile')}}" class="avatar avatar-sm me-2"><img class="avatar-img rounded-circle" src="{{URL::asset('/assets_admin/img/patients/patient4.jpg')}}" alt="User Image"></a>
-                                                    <a href="{{url('admin/profile')}}"> Michelle Fairfax</a>
-                                                </h2>
-                                            </td>
-                                            <td>5043686874</td>
-                                            <td>21 Sep 2023</td>
-                                            <td>$150.00</td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <h2 class="table-avatar">
-                                                    <a href="{{url('admin/profile')}}" class="avatar avatar-sm me-2"><img class="avatar-img rounded-circle" src="{{URL::asset('/assets_admin/img/patients/patient5.jpg')}}" alt="User Image"></a>
-                                                    <a href="{{url('admin/profile')}}">Gina Moore</a>
-                                                </h2>
-                                            </td>
-                                            <td>9548207887</td>
-                                            <td>18 Sep 2023</td>
-                                            <td>$350.00</td>
-                                        </tr>
+                                        @endforelse
                                     </tbody>
                                 </table>
                             </div>
@@ -355,7 +262,7 @@
                                             <td>
                                                 <h2 class="table-avatar">
                                                     <a href="{{ route('admin.psychologists.show', $appointment->psychologist->id) }}" class="avatar avatar-sm me-2">
-                                                        <img class="avatar-img rounded-circle" src="{{ asset('assets_admin/img/doctors/doctor-thumb-01.jpg') }}" alt="User Image">
+                                                        <img class="avatar-img rounded-circle" src="{{ $appointment->psychologist->user->profile_image ? asset('storage/' . $appointment->psychologist->user->profile_image) : asset('assets_admin/img/doctors/doctor-thumb-01.jpg') }}" alt="User Image">
                                                     </a>
                                                     <a href="{{ route('admin.psychologists.show', $appointment->psychologist->id) }}">{{ $appointment->psychologist->user->name }}</a>
                                                 </h2>
@@ -364,7 +271,7 @@
                                             <td>
                                                 <h2 class="table-avatar">
                                                     <a href="#" class="avatar avatar-sm me-2">
-                                                        <img class="avatar-img rounded-circle" src="{{ asset('assets_admin/img/patients/patient1.jpg') }}" alt="User Image">
+                                                        <img class="avatar-img rounded-circle" src="{{ $appointment->patient->user->profile_image ? asset('storage/' . $appointment->patient->user->profile_image) : asset('assets_admin/img/patients/patient1.jpg') }}" alt="User Image">
                                                     </a>
                                                     <a href="#">{{ $appointment->patient->user->name }}</a>
                                                 </h2>

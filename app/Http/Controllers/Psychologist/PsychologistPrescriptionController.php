@@ -15,6 +15,57 @@ class PsychologistPrescriptionController extends Controller
         $this->middleware(['auth', 'role:psychologist']);
     }
 
+    public function index(Request $request)
+    {
+        $psychologist = Auth::user()->psychologist;
+        
+        if (!$psychologist) {
+            abort(404, 'Psychologist profile not found');
+        }
+        
+        $query = Prescription::with(['appointment.patient.user', 'appointment'])
+            ->where('psychologist_id', $psychologist->id);
+
+        // Search functionality
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('appointment.patient.user', function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            })->orWhere('notes', 'like', "%{$search}%")
+              ->orWhere('therapy_plan', 'like', "%{$search}%");
+        }
+
+        // Filter by date range
+        if ($request->filled('date_from')) {
+            $query->where('created_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->where('created_at', '<=', $request->date_to);
+        }
+
+        $prescriptions = $query->latest()->get();
+
+        // Calculate statistics
+        $stats = [
+            'total' => Prescription::where('psychologist_id', $psychologist->id)->count(),
+            'this_month' => Prescription::where('psychologist_id', $psychologist->id)
+                ->whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->count(),
+            'with_therapy_plan' => Prescription::where('psychologist_id', $psychologist->id)
+                ->whereNotNull('therapy_plan')
+                ->where('therapy_plan', '!=', '')
+                ->count(),
+            'with_notes' => Prescription::where('psychologist_id', $psychologist->id)
+                ->whereNotNull('notes')
+                ->where('notes', '!=', '')
+                ->count(),
+        ];
+
+        return view('psychologist.prescriptions.index', compact('prescriptions', 'stats'));
+    }
+
     public function create(Appointment $appointment)
     {
         if ($appointment->psychologist_id !== Auth::user()->psychologist->id) {

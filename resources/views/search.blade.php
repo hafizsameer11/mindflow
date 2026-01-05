@@ -22,7 +22,7 @@
 							<div class="search-input search-line">
 								<i class="isax isax-hospital5 bficon"></i>
 								<div class=" mb-0">
-									<input type="text" name="search" class="form-control" placeholder="Search for Psychologists" value="{{ request('search') }}">
+									<input type="text" name="search" class="form-control" placeholder="Search by name or specialty" value="{{ request('search') }}">
 								</div>
 							</div>
 							<div class="search-input search-map-line">
@@ -39,7 +39,7 @@
 							<div class="search-input search-calendar-line">
 								<i class="isax isax-dollar-circle"></i>
 								<div class=" mb-0">
-									<input type="number" name="max_fee" class="form-control" placeholder="Max Fee" value="{{ request('max_fee') }}">
+									<input type="number" name="max_fee" class="form-control" placeholder="Max Fee ($)" value="{{ request('max_fee') }}" min="0" step="0.01">
 								</div>
 							</div>
 							<div class="form-search-btn">
@@ -80,73 +80,93 @@
                         <a href="javascript:void(0);" class="btn btn-sm head-icon me-3" id="filter_search"><i class="isax isax-sort"></i></a>
                         <div class="dropdown header-dropdown">
                             <a class="dropdown-toggle sort-dropdown" data-bs-toggle="dropdown" href="javascript:void(0);" aria-expanded="false">
-                                <span>Sort By</span>Price (Low to High)
+                                <span>Sort By: </span>
+                                @php
+                                    $sortLabels = [
+                                        'name' => 'Name (A-Z)',
+                                        'fee_low' => 'Price (Low to High)',
+                                        'fee_high' => 'Price (High to Low)',
+                                        'experience' => 'Experience',
+                                        'rating' => 'Rating'
+                                    ];
+                                    $currentSort = request('sort_by', 'name');
+                                @endphp
+                                {{ $sortLabels[$currentSort] ?? 'Name (A-Z)' }}
                             </a>
                             <div class="dropdown-menu dropdown-menu-end">
-                                <a href="javascript:void(0);" class="dropdown-item">
+                                <a href="{{ route('patient.search', array_merge(request()->all(), ['sort_by' => 'name'])) }}" class="dropdown-item {{ request('sort_by', 'name') == 'name' ? 'active' : '' }}">
+                                    Name (A-Z)
+                                </a>
+                                <a href="{{ route('patient.search', array_merge(request()->all(), ['sort_by' => 'fee_low'])) }}" class="dropdown-item {{ request('sort_by') == 'fee_low' ? 'active' : '' }}">
                                     Price (Low to High)
                                 </a>
-                                <a href="javascript:void(0);" class="dropdown-item">
+                                <a href="{{ route('patient.search', array_merge(request()->all(), ['sort_by' => 'fee_high'])) }}" class="dropdown-item {{ request('sort_by') == 'fee_high' ? 'active' : '' }}">
                                     Price (High to Low)
+                                </a>
+                                <a href="{{ route('patient.search', array_merge(request()->all(), ['sort_by' => 'experience'])) }}" class="dropdown-item {{ request('sort_by') == 'experience' ? 'active' : '' }}">
+                                    Experience
+                                </a>
+                                <a href="{{ route('patient.search', array_merge(request()->all(), ['sort_by' => 'rating'])) }}" class="dropdown-item {{ request('sort_by') == 'rating' ? 'active' : '' }}">
+                                    Rating
                                 </a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div id="filter_inputs">
-                <div class="row align-items-center gy-3">
-                    <div class="col-lg-9 mb-4">
-                        <div class="row gx-3">
-                            <div class="col-md col-sm-4 col-6">
-                                <select class="select form-control">
-                                    <option>Specialities</option>
-                                    <option>Urology</option>
-                                    <option>Psychiatry</option>
-                                    <option>Psychiatry</option>
-                                    <option>Cardiology</option>
-                                </select>
+            <div id="filter_inputs" style="display: none;">
+                <form action="{{ route('patient.search') }}" method="GET" id="filterForm">
+                    @if(request('search'))
+                        <input type="hidden" name="search" value="{{ request('search') }}">
+                    @endif
+                    <div class="row align-items-center gy-3">
+                        <div class="col-lg-9 mb-4">
+                            <div class="row gx-3">
+                                <div class="col-md col-sm-4 col-6">
+                                    <label class="form-label small">Specialization</label>
+                                    <select name="specialization" class="select form-control form-control-sm">
+                                        <option value="">All Specializations</option>
+                                        @foreach($specializations ?? [] as $spec)
+                                        <option value="{{ $spec }}" {{ request('specialization') == $spec ? 'selected' : '' }}>{{ $spec }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md col-sm-4 col-6">
+                                    <label class="form-label small">Min Experience (Years)</label>
+                                    <input type="number" name="min_experience" class="form-control form-control-sm" placeholder="Min" value="{{ request('min_experience') }}" min="0" max="{{ $stats['max_experience'] ?? 50 }}">
+                                </div>
+                                <div class="col-md col-sm-4 col-6">
+                                    <label class="form-label small">Max Experience (Years)</label>
+                                    <input type="number" name="max_experience" class="form-control form-control-sm" placeholder="Max" value="{{ request('max_experience') }}" min="0" max="{{ $stats['max_experience'] ?? 50 }}">
+                                </div>
+                                <div class="col-md col-sm-4 col-6">
+                                    <label class="form-label small">Min Fee ($)</label>
+                                    <input type="number" name="min_fee" class="form-control form-control-sm" placeholder="Min" value="{{ request('min_fee') }}" min="0" step="0.01">
+                                </div>
+                                <div class="col-md col-sm-4 col-6">
+                                    <label class="form-label small">Max Fee ($)</label>
+                                    <input type="number" name="max_fee" class="form-control form-control-sm" placeholder="Max" value="{{ request('max_fee') }}" min="0" step="0.01">
+                                </div>
+                                <div class="col-md col-sm-4 col-6">
+                                    <label class="form-label small">Min Rating</label>
+                                    <select name="min_rating" class="select form-control form-control-sm">
+                                        <option value="">Any Rating</option>
+                                        <option value="4.5" {{ request('min_rating') == '4.5' ? 'selected' : '' }}>4.5+ Stars</option>
+                                        <option value="4" {{ request('min_rating') == '4' ? 'selected' : '' }}>4+ Stars</option>
+                                        <option value="3.5" {{ request('min_rating') == '3.5' ? 'selected' : '' }}>3.5+ Stars</option>
+                                        <option value="3" {{ request('min_rating') == '3' ? 'selected' : '' }}>3+ Stars</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div class="col-md col-sm-4 col-6">
-                                <select class="select form-control">
-                                    <option>Hospitals</option>
-                                    <option>Cleveland Clinic</option>
-                                    <option>Apollo Hospital</option>
-                                    <option>Apollo Hospital</option>
-                                </select>
-                            </div>
-                            <div class="col-md col-sm-4 col-6">
-                                <select class="select form-control">
-                                    <option>Doctors</option>
-                                    <option>Dr. Michael Brown</option>
-                                    <option>Dr. Nicholas Tello</option>
-                                    <option>Dr. Harold Bryant</option>
-                                </select>
-                            </div>
-                            <div class="col-md col-sm-4 col-6">
-                                <select class="select form-control">
-                                    <option>Reviews</option>
-                                    <option>5 Star</option>
-                                    <option>4 Star</option>
-                                    <option>3 Star</option>
-                                </select>
-                            </div>
-                            <div class="col-md col-sm-4 col-6">
-                                <select class="select form-control">
-                                    <option>Clinic</option>
-                                    <option>Bright Smiles Dental Clinic</option>
-                                    <option>Family Care Clinic</option>
-                                    <option>Express Health Clinic</option>
-                                </select>
+                        </div>
+                        <div class="col-lg-3 mb-4">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <button type="submit" class="btn btn-primary btn-sm">Apply Filters</button>
+                                <a href="{{ route('patient.search') }}" class="btn btn-secondary btn-sm">Clear All</a>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-3 mb-4">
-                        <div class="text-end">
-                            <a href="#" class="fw-medium text-secondary text-decoration-underline">Clear All</a>
-                        </div>
-                    </div>
-                </div>
+                </form>
             </div>
             <div class="row">
                 @forelse($psychologists ?? [] as $psychologist)
@@ -154,7 +174,12 @@
                     <div class="card">
                         <div class="card-img card-img-hover">
                             <a href="{{ route('patient.psychologist.show', $psychologist->id) }}">
-                                <img src="{{ asset('assets/img/doctor-grid/doctor-grid-01.jpg') }}" alt="">
+                                @php
+                                    $profileImage = $psychologist->user->profile_image 
+                                        ? asset('storage/' . $psychologist->user->profile_image) 
+                                        : asset('assets/img/doctor-grid/doctor-grid-01.jpg');
+                                @endphp
+                                <img src="{{ $profileImage }}" alt="{{ $psychologist->user->name }}" style="width: 100%; height: 250px; object-fit: cover;">
                             </a>
                             <div class="grid-overlay-item d-flex align-items-center justify-content-between">
                                 @php

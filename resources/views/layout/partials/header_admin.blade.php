@@ -110,23 +110,30 @@
         <!-- /Notifications -->
         
         <!-- User Menu -->
+        @php
+            $adminUser = Auth::user();
+            $adminProfileImage = $adminUser && $adminUser->profile_image 
+                ? asset('storage/' . $adminUser->profile_image) 
+                : URL::asset('/assets_admin/img/profiles/avatar-01.jpg');
+            $adminName = $adminUser ? $adminUser->name : 'Admin User';
+        @endphp
         <li class="nav-item dropdown has-arrow">
             <a href="javascript:;" class="dropdown-toggle nav-link" data-bs-toggle="dropdown">
-                <span class="user-img"><img class="rounded-circle" src="{{ URL::asset('/assets_admin/img/profiles/avatar-01.jpg')}}" width="31" alt="Ryan Taylor"></span>
+                <span class="user-img"><img class="rounded-circle" src="{{ $adminProfileImage }}" width="31" alt="{{ $adminName }}"></span>
             </a>
             <div class="dropdown-menu">
                 <div class="user-header">
                     <div class="avatar avatar-sm">
-                        <img src="{{ URL::asset('/assets_admin/img/profiles/avatar-01.jpg')}}" alt="User Image" class="avatar-img rounded-circle">
+                        <img src="{{ $adminProfileImage }}" alt="User Image" class="avatar-img rounded-circle">
                     </div>
                     <div class="user-text">
-                        <h6>Ryan Taylor</h6>
+                        <h6>{{ $adminName }}</h6>
                         <p class="text-muted mb-0">Administrator</p>
                     </div>
                 </div>
                 <a class="dropdown-item" href="{{url('admin/profile')}}">My Profile</a>
                 <a class="dropdown-item" href="{{url('admin/settings')}}">Settings</a>
-                <a class="dropdown-item" href="{{url('admin/login')}}">Logout</a>
+                <a class="dropdown-item" href="{{route('admin.signout')}}">Logout</a>
             </div>
         </li>
         <!-- /User Menu -->

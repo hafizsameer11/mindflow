@@ -29,7 +29,26 @@ class CustomAuthController extends Controller
             'password.required' => 'Password is required',
         ]
     );
-        $credentials = $request->only('email', 'password');
+        // Normalize email (trim whitespace)
+        $email = trim($request->email);
+        
+        // Try exact match first (most databases are case-insensitive by default)
+        $user = User::where('email', $email)->first();
+        
+        // If not found, try case-insensitive search
+        if (!$user) {
+            $user = User::whereRaw('LOWER(TRIM(email)) = LOWER(?)', [$email])->first();
+        }
+        
+        if (!$user) {
+            return redirect()->back()->withErrors(['email' => 'No account found with this email address.'])->withInput($request->only('email'));
+        }
+        
+        // Use the actual email from database for Auth::attempt
+        $credentials = [
+            'email' => $user->email,
+            'password' => $request->password
+        ];
         
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
@@ -44,7 +63,7 @@ class CustomAuthController extends Controller
             }
         }
         
-        return redirect("admin/login")->withErrors('These credentials do not match our records.');
+        return redirect()->back()->withErrors(['email' => 'Invalid password. Please check your password and try again.'])->withInput($request->only('email'));
     }
 
     public function registration()
@@ -81,7 +100,7 @@ class CustomAuthController extends Controller
       return User::create([
         'name' => $data['name'],
         'email' => $data['email'],
-        'password' => Hash::make($data['password']),
+        'password' => $data['password'], // The 'hashed' cast in User model will automatically hash this
         'role' => $data['role'] ?? 'patient',
       ]);
     }    
@@ -101,6 +120,6 @@ class CustomAuthController extends Controller
         Session::flush();
         Auth::logout();
   
-        return Redirect('admin/login');
+        return Redirect('/');
     }
 }

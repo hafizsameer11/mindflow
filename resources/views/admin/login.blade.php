@@ -14,16 +14,27 @@
                             <h1>Login</h1>
                             <p class="account-subtitle">Access to our dashboard</p>
 
+                            @if ($errors->any())
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    @foreach ($errors->all() as $error)
+                                        <div>{{ $error }}</div>
+                                    @endforeach
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            @endif
+                            @if (session('success'))
+                                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                    {{ session('success') }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            @endif
                             <!-- Form -->
-                            <form method="post" action="{{ route('login.custom') }}">
+                            <form method="post" action="{{ route('admin.login.post') }}">
                                 @csrf
                                 <div class="mb-3">
-                                    <input class="form-control" type="text" placeholder="Email" value="admin@example.com"
-                                        name="email" id="email">
+                                    <input class="form-control" type="text" placeholder="Email" value="{{ old('email') }}"
+                                        name="email" id="email" required>
                                     <div class="text-danger pt-2">
-                                        @error('0')
-                                            {{ $message }}
-                                        @enderror
                                         @error('email')
                                             {{ $message }}
                                         @enderror
@@ -32,12 +43,9 @@
                                 <div class="mb-3">
                                     <div class="pass-group">
                                         <input class="form-control pass-input" type="password" placeholder="Password"
-                                            value="123456" name="password" id="password">
+                                            name="password" id="password" required>
                                         <span class="feather-eye-off toggle-password"></span>
                                         <div class="text-danger pt-2">
-                                            @error('0')
-                                                {{ $message }}
-                                            @enderror
                                             @error('password')
                                                 {{ $message }}
                                             @enderror

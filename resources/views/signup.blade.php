@@ -43,6 +43,20 @@
                                     <i class="isax isax-arrow-right-1"></i>
                                 </div>
                             </a>
+                            <a href="{{url('admin/login')}}" class="signup-btn-info">
+                                <div class="signup-info">
+                                    <div class="signup-icon">
+                                        <img src="{{URL::asset('assets/img/icons/admin-icon.svg')}}" alt="admin-icon">
+                                    </div>
+                                    <div class="signup-content">
+                                        <h4>Admin</h4>
+                                        <p>Access Admin Dashboard and Manage the Platform</p>
+                                    </div>
+                                </div>
+                                <div class="signup-arrow">
+                                    <i class="isax isax-arrow-right-1"></i>
+                                </div>
+                            </a>
                         </div>
                     </div>
                 </div>

@@ -549,3 +549,5 @@
 
 <!-- Custom JS -->
 <script src="{{ URL::asset('/assets/js/script.js') }}"></script>
+
+@stack('scripts')

@@ -106,6 +106,11 @@
 
                                 </div>
                             </form>
+                            @else
+                            <div class="alert alert-danger">
+                                <p>Appointment not found. Please try again.</p>
+                            </div>
+                            @endif
                             <!-- /Checkout Form -->
 
                         </div>

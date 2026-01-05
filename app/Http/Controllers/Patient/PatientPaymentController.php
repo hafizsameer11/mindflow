@@ -83,13 +83,35 @@ class PatientPaymentController extends Controller
     {
         $patient = Auth::user()->patient;
         
+        if (!$patient) {
+            return redirect()->route('patient.dashboard')->withErrors('Patient profile not found.');
+        }
+        
         $payments = Payment::with(['appointment.psychologist.user'])
             ->whereHas('appointment', function($query) use ($patient) {
                 $query->where('patient_id', $patient->id);
             })
             ->latest()
-            ->paginate(15);
+            ->get();
 
         return view('patient.payments.index', compact('payments'));
+    }
+
+    public function downloadReceipt(Payment $payment)
+    {
+        $patient = Auth::user()->patient;
+
+        if (!$patient || $payment->appointment->patient_id !== $patient->id) {
+            abort(403, 'Unauthorized');
+        }
+
+        if (!$payment->receipt_file_path || !Storage::disk('public')->exists($payment->receipt_file_path)) {
+            abort(404, 'Receipt not found');
+        }
+
+        $filePath = Storage::disk('public')->path($payment->receipt_file_path);
+        $fileName = 'receipt-' . $payment->id . '.' . pathinfo($filePath, PATHINFO_EXTENSION);
+
+        return response()->download($filePath, $fileName);
     }
 }

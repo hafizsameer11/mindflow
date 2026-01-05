@@ -18,6 +18,10 @@ class Appointment extends Model
         'consultation_type',
         'meeting_link',
         'notes',
+        'session_notes',
+        'diagnosis',
+        'observations',
+        'follow_up_recommendations',
     ];
 
     protected $casts = [
