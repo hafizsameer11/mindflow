@@ -128,6 +128,28 @@ class PsychologistController extends Controller
             ->take(5)
             ->get();
 
+        // Get refund requests for this psychologist's appointments
+        $refund_requests = Payment::with(['appointment.patient.user', 'refundRequester'])
+            ->whereHas('appointment', function($q) use ($psychologist) {
+                $q->where('psychologist_id', $psychologist->id);
+            })
+            ->where('refund_status', 'requested')
+            ->latest('refund_requested_at')
+            ->take(10)
+            ->get();
+
+        $refund_stats = [
+            'pending' => Payment::whereHas('appointment', function($q) use ($psychologist) {
+                $q->where('psychologist_id', $psychologist->id);
+            })->where('refund_status', 'requested')->count(),
+            'approved' => Payment::whereHas('appointment', function($q) use ($psychologist) {
+                $q->where('psychologist_id', $psychologist->id);
+            })->where('refund_status', 'approved')->count(),
+            'processed' => Payment::whereHas('appointment', function($q) use ($psychologist) {
+                $q->where('psychologist_id', $psychologist->id);
+            })->where('refund_status', 'processed')->count(),
+        ];
+
         // Get recent notifications (announcements)
         $notifications = Auth::user()->notifications()
             ->where('type', 'App\Notifications\AdminAnnouncementNotification')
@@ -149,6 +171,8 @@ class PsychologistController extends Controller
             'recent_invoices',
             'weeklyRevenue',
             'weeklyAppointments',
+            'refund_requests',
+            'refund_stats',
             'notifications', 
             'unreadCount'
         ));

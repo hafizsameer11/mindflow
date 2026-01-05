@@ -22,7 +22,7 @@
 </head>
 
 <body>
-    @if (!Route::is(['login', 'register', 'forgot-password', 'lock-screen', 'error-404', 'error-500']))
+    @if (!Route::is(['login', 'admin.login', 'admin.login.post', 'register', 'forgot-password', 'lock-screen', 'error-404', 'error-500']) && !request()->is('admin/login'))
         @include('layout.partials.header_admin')
         @include('layout.partials.nav_admin')
     @endif

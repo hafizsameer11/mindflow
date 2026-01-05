@@ -296,6 +296,85 @@
                     </div>
                     <!-- /Recent Orders -->
 
+                    <!-- Refund Requests Section -->
+                    <div class="col-md-12 d-flex">
+                        <div class="card card-table flex-fill">
+                            <div class="card-header">
+                                <h4 class="card-title">
+                                    <i class="fa-solid fa-undo me-2"></i>Refund Requests
+                                    @if(isset($refund_stats['pending']) && $refund_stats['pending'] > 0)
+                                        <span class="badge bg-warning ms-2">{{ $refund_stats['pending'] }} Pending</span>
+                                    @endif
+                                </h4>
+                                <a href="{{ route('admin.payments.index') }}?refund_status=requested" class="btn btn-sm btn-primary">View All</a>
+                            </div>
+                            <div class="card-body">
+                                @if(isset($refund_requests) && $refund_requests->count() > 0)
+                                    <div class="table-responsive">
+                                        <table class="table table-hover table-center mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Payment ID</th>
+                                                    <th>Patient</th>
+                                                    <th>Psychologist</th>
+                                                    <th>Amount</th>
+                                                    <th>Refund Amount</th>
+                                                    <th>Reason</th>
+                                                    <th>Requested Date</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($refund_requests as $refund)
+                                                <tr>
+                                                    <td>#PAY{{ str_pad($refund->id, 4, '0', STR_PAD_LEFT) }}</td>
+                                                    <td>
+                                                        <h2 class="table-avatar">
+                                                            <a href="#" class="avatar avatar-sm me-2">
+                                                                <img class="avatar-img rounded-circle" src="{{ $refund->appointment->patient->user->profile_image ? asset('storage/' . $refund->appointment->patient->user->profile_image) : asset('assets_admin/img/profiles/avatar-02.jpg') }}" alt="Patient Image">
+                                                            </a>
+                                                            <a href="#">{{ $refund->appointment->patient->user->name }}</a>
+                                                        </h2>
+                                                    </td>
+                                                    <td>
+                                                        <h2 class="table-avatar">
+                                                            <a href="#" class="avatar avatar-sm me-2">
+                                                                <img class="avatar-img rounded-circle" src="{{ $refund->appointment->psychologist->user->profile_image ? asset('storage/' . $refund->appointment->psychologist->user->profile_image) : asset('assets_admin/img/profiles/avatar-01.jpg') }}" alt="Psychologist Image">
+                                                            </a>
+                                                            <a href="#">{{ $refund->appointment->psychologist->user->name }}</a>
+                                                        </h2>
+                                                    </td>
+                                                    <td>${{ number_format($refund->amount, 2) }}</td>
+                                                    <td><strong class="text-warning">${{ number_format($refund->refund_amount ?? $refund->amount, 2) }}</strong></td>
+                                                    <td>
+                                                        <span class="text-truncate d-inline-block" style="max-width: 200px;" title="{{ $refund->refund_reason }}">
+                                                            {{ Str::limit($refund->refund_reason, 50) }}
+                                                        </span>
+                                                    </td>
+                                                    <td>{{ $refund->refund_requested_at ? $refund->refund_requested_at->format('M d, Y h:i A') : 'N/A' }}</td>
+                                                    <td>
+                                                        <div class="actions">
+                                                            <a href="{{ route('admin.payments.index') }}?payment_id={{ $refund->id }}" class="btn btn-sm bg-success-light me-2">
+                                                                <i class="fe fe-eye"></i> Review
+                                                            </a>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                @else
+                                    <div class="text-center py-4">
+                                        <i class="fa-solid fa-check-circle text-success" style="font-size: 48px;"></i>
+                                        <p class="text-muted mt-3 mb-0">No pending refund requests</p>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /Refund Requests Section -->
+
                 </div>
             </div>
 

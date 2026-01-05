@@ -60,7 +60,7 @@
                                             @php
                                                 $profileImage = $appointment->patient->user->profile_image 
                                                     ? asset('storage/' . $appointment->patient->user->profile_image) 
-                                                    : asset('assets/img/doctors-dashboard/profile-02.jpg');
+                                                    : asset('assets/img/patients/patient.jpg');
                                             @endphp
                                             <img src="{{ $profileImage }}" alt="Patient Image">
                                         </a>
@@ -118,6 +118,13 @@
                                             </form>
                                         </li>
                                         @endif
+                                        @if($appointment->status === 'confirmed' && $appointment->appointment_date >= today())
+                                        <li>
+                                            <a href="{{ route('psychologist.session.start', $appointment) }}" class="border-0 bg-transparent text-primary" title="Start Session">
+                                                <i class="fa-solid fa-video"></i>
+                                            </a>
+                                        </li>
+                                        @endif
                                         @if(in_array($appointment->status, ['pending', 'confirmed']))
                                         <li>
                                             <button type="button" class="border-0 bg-transparent text-primary" data-bs-toggle="modal" data-bs-target="#rescheduleModal" title="Reschedule">
@@ -152,7 +159,7 @@
                                     <span>{{ $appointment->patient->user->address }}</span>
                                 </li>
                                 @endif
-                                @if($appointment->status === 'confirmed' && $appointment->appointment_date == today())
+                                @if($appointment->status === 'confirmed' && $appointment->appointment_date >= today())
                                 <li>
                                     <div class="start-btn">
                                         <a href="{{ route('psychologist.session.start', $appointment) }}" class="btn btn-primary">
@@ -209,16 +216,50 @@
                                         @endif
                                     </div>
                                     <div class="col-md-6">
-                                        @if($appointment->payment->receipt_file_path)
+                                        @if($appointment->payment && $appointment->payment->receipt_file_path)
                                             <p><strong>Payment Receipt:</strong></p>
                                             @php
                                                 $receiptPath = asset('storage/' . $appointment->payment->receipt_file_path);
-                                                $isImage = in_array(strtolower(pathinfo($appointment->payment->receipt_file_path, PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'gif']);
+                                                $fileExtension = strtolower(pathinfo($appointment->payment->receipt_file_path, PATHINFO_EXTENSION));
+                                                $isImage = in_array($fileExtension, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                                                $fileExists = \Storage::disk('public')->exists($appointment->payment->receipt_file_path);
                                             @endphp
                                             
-                                            @if($isImage)
+                                            @if(!$fileExists)
+                                                <div class="alert alert-warning mb-3">
+                                                    <i class="fa-solid fa-exclamation-triangle me-2"></i>
+                                                    Receipt file not found at: {{ $appointment->payment->receipt_file_path }}
+                                                </div>
+                                            @endif
+                                            
+                                            @if($isImage && $fileExists)
                                                 <div class="mb-3">
-                                                    <img src="{{ $receiptPath }}" alt="Payment Receipt" class="img-fluid rounded border" style="max-height: 400px; cursor: pointer;" onclick="window.open('{{ $receiptPath }}', '_blank')">
+                                                    <img src="{{ $receiptPath }}?t={{ time() }}" 
+                                                         alt="Payment Receipt" 
+                                                         class="img-fluid rounded border shadow-sm" 
+                                                         style="max-height: 400px; cursor: pointer; width: 100%; object-fit: contain; background: #f8f9fa; display: block;" 
+                                                         onclick="window.open('{{ $receiptPath }}', '_blank')"
+                                                         onerror="this.onerror=null; this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='block';">
+                                                    <div style="display:none;" class="alert alert-warning">
+                                                        <i class="fa-solid fa-exclamation-triangle me-2"></i>
+                                                        Image could not be loaded. 
+                                                        <a href="{{ $receiptPath }}" target="_blank" class="alert-link">Click here to try viewing directly</a>
+                                                    </div>
+                                                </div>
+                                            @elseif($isImage)
+                                                <div class="alert alert-info mb-3">
+                                                    <i class="fa-solid fa-info-circle me-2"></i>
+                                                    Image file exists but may not be accessible. Try the view button below.
+                                                </div>
+                                            @else
+                                                <div class="mb-3">
+                                                    <div class="alert alert-info d-flex align-items-center">
+                                                        <i class="fa-solid fa-file-pdf me-2" style="font-size: 24px;"></i>
+                                                        <div>
+                                                            <strong>PDF Receipt</strong><br>
+                                                            <small>Click the button below to view the receipt</small>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             @endif
                                             
@@ -226,7 +267,7 @@
                                                 <a href="{{ $receiptPath }}" target="_blank" class="btn btn-sm btn-primary">
                                                     <i class="fa-solid fa-eye me-1"></i>View Receipt
                                                 </a>
-                                                <a href="{{ route('admin.payments.receipt', $appointment->payment->id) }}" class="btn btn-sm btn-secondary">
+                                                <a href="{{ $receiptPath }}" download class="btn btn-sm btn-secondary">
                                                     <i class="fa-solid fa-download me-1"></i>Download
                                                 </a>
                                             </div>

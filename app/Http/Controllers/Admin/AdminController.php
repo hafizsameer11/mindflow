@@ -82,7 +82,21 @@ class AdminController extends Controller
                 return $patient;
             });
 
-        return view('admin.index_admin', compact('stats', 'recent_appointments', 'top_psychologists', 'recent_patients'));
+        // Get pending refund requests
+        $refund_requests = Payment::with(['appointment.patient.user', 'appointment.psychologist.user', 'refundRequester'])
+            ->where('refund_status', 'requested')
+            ->latest('refund_requested_at')
+            ->take(10)
+            ->get();
+
+        $refund_stats = [
+            'pending' => Payment::where('refund_status', 'requested')->count(),
+            'approved' => Payment::where('refund_status', 'approved')->count(),
+            'processed' => Payment::where('refund_status', 'processed')->count(),
+            'total_amount' => Payment::where('refund_status', 'requested')->sum('refund_amount'),
+        ];
+
+        return view('admin.index_admin', compact('stats', 'recent_appointments', 'top_psychologists', 'recent_patients', 'refund_requests', 'refund_stats'));
     }
 
     public function patientList()

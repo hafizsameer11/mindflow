@@ -392,6 +392,90 @@
                         </div>
                         <!-- /Conduct Online Sessions Section -->
 
+                        <!-- Refund Requests Section -->
+                        <div class="col-xl-12 d-flex mt-4">
+                            <div class="dashboard-card w-100">
+                                <div class="dashboard-card-head">
+                                    <div class="header-title">
+                                        <h5>
+                                            <i class="fa-solid fa-undo me-2"></i>Refund Requests
+                                            @if(isset($refund_stats['pending']) && $refund_stats['pending'] > 0)
+                                                <span class="badge bg-warning ms-2">{{ $refund_stats['pending'] }} Pending</span>
+                                            @endif
+                                        </h5>
+                                        <p class="text-muted mb-0 small">Review refund requests from patients for your appointments.</p>
+                                    </div>
+                                    @if(isset($refund_stats['pending']) && $refund_stats['pending'] > 0)
+                                    <div class="card-view-link">
+                                        <a href="{{ route('psychologist.appointments.index') }}?refund_status=requested">View All</a>
+                                    </div>
+                                    @endif
+                                </div>
+                                <div class="dashboard-card-body">
+                                    @if(isset($refund_requests) && $refund_requests->count() > 0)
+                                    <div class="table-responsive">
+                                        <table class="table dashboard-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Payment ID</th>
+                                                    <th>Patient</th>
+                                                    <th>Appointment</th>
+                                                    <th>Amount</th>
+                                                    <th>Refund Amount</th>
+                                                    <th>Reason</th>
+                                                    <th>Requested Date</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($refund_requests as $refund)
+                                                <tr>
+                                                    <td>#PAY{{ str_pad($refund->id, 4, '0', STR_PAD_LEFT) }}</td>
+                                                    <td>
+                                                        <div class="patient-info-profile">
+                                                            <a href="{{ route('psychologist.appointments.show', $refund->appointment) }}" class="table-avatar">
+                                                                <img src="{{ $refund->appointment->patient->user->profile_image ? asset('storage/' . $refund->appointment->patient->user->profile_image) : asset('assets/index/patient.jpg') }}" alt="Img">
+                                                            </a>
+                                                            <div class="patient-name-info">
+                                                                <h5><a href="{{ route('psychologist.appointments.show', $refund->appointment) }}">{{ $refund->appointment->patient->user->name }}</a></h5>
+                                                                <span>{{ $refund->appointment->patient->user->email }}</span>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <span>#APT{{ str_pad($refund->appointment->id, 4, '0', STR_PAD_LEFT) }}</span><br>
+                                                        <small class="text-muted">{{ $refund->appointment->appointment_date->format('M d, Y') }}</small>
+                                                    </td>
+                                                    <td>${{ number_format($refund->amount, 2) }}</td>
+                                                    <td><strong class="text-warning">${{ number_format($refund->refund_amount ?? $refund->amount, 2) }}</strong></td>
+                                                    <td>
+                                                        <span class="text-truncate d-inline-block" style="max-width: 200px;" title="{{ $refund->refund_reason }}">
+                                                            {{ Str::limit($refund->refund_reason, 50) }}
+                                                        </span>
+                                                    </td>
+                                                    <td>{{ $refund->refund_requested_at ? $refund->refund_requested_at->format('M d, Y') : 'N/A' }}</td>
+                                                    <td>
+                                                        <a href="{{ route('psychologist.appointments.show', $refund->appointment) }}" class="btn btn-primary btn-sm">
+                                                            <i class="fa-solid fa-eye me-1"></i>View Details
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    @else
+                                    <div class="text-center py-5">
+                                        <i class="fa-solid fa-check-circle text-success" style="font-size: 48px;"></i>
+                                        <p class="text-muted mt-3 mb-0">No pending refund requests</p>
+                                        <p class="text-muted small">Refund requests from patients will appear here</p>
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /Refund Requests Section -->
+
                         <!-- Notifications Section -->
                         <div id="notifications" class="col-xl-12 d-flex mt-4">
                         @if(isset($notifications) && $notifications->count() > 0)

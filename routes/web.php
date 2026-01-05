@@ -101,6 +101,7 @@ Route::middleware(['auth', 'role:patient'])->prefix('patient')->name('patient.')
     Route::post('appointments/{appointment}/payment', [PatientPaymentController::class, 'store'])->name('payment.store');
     Route::get('payments', [PatientPaymentController::class, 'index'])->name('payments.index');
     Route::get('payments/{payment}/receipt', [PatientPaymentController::class, 'downloadReceipt'])->name('payments.receipt');
+    Route::post('payments/{payment}/request-refund', [PatientPaymentController::class, 'requestRefund'])->name('payments.request-refund');
     
     Route::get('appointments/{appointment}/join', [PatientSessionController::class, 'join'])->name('session.join');
     

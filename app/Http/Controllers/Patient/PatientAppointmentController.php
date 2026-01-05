@@ -24,7 +24,7 @@ class PatientAppointmentController extends Controller
         
         $baseQuery = Appointment::where('patient_id', $patient->id);
         
-        $query = Appointment::with('psychologist.user')
+        $query = Appointment::with(['psychologist.user', 'payment'])
             ->where('patient_id', $patient->id);
 
         if ($request->filled('status')) {

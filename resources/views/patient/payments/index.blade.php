@@ -35,6 +35,22 @@
                         </div>
                     @endif
 
+                    @if(session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            {{ session('error') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
+
+                    @if($errors->any())
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            @foreach($errors->all() as $error)
+                                <div>{{ $error }}</div>
+                            @endforeach
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
+
                     @php
                         $patient = Auth::user()->patient;
                         $totalPaid = $payments->where('status', 'verified')->sum('amount');
@@ -121,6 +137,12 @@
                                                     <span class="badge bg-{{ $payment->status === 'verified' ? 'success' : ($payment->status === 'rejected' ? 'danger' : ($payment->status === 'pending_verification' ? 'warning' : 'secondary')) }}">
                                                         {{ ucfirst(str_replace('_', ' ', $payment->status)) }}
                                                     </span>
+                                                    @if($payment->refund_status !== 'none')
+                                                        <br>
+                                                        <small class="badge bg-{{ $payment->refund_status === 'requested' ? 'warning' : ($payment->refund_status === 'approved' ? 'info' : ($payment->refund_status === 'processed' ? 'success' : 'danger')) }}">
+                                                            Refund: {{ ucfirst($payment->refund_status) }}
+                                                        </small>
+                                                    @endif
                                                 </td>
                                                 <td>
                                                     <small class="text-muted">{{ $payment->transaction_id }}</small>
@@ -129,14 +151,21 @@
                                                     <small>{{ $payment->bank_name }}</small>
                                                 </td>
                                                 <td class="text-end">
-                                                    <a href="{{ route('patient.appointments.show', $payment->appointment) }}" class="btn btn-sm btn-outline-primary">
-                                                        <i class="fa-solid fa-eye me-1"></i>View Details
-                                                    </a>
-                                                    @if($payment->receipt_file_path)
-                                                        <a href="{{ route('patient.payments.receipt', $payment) }}" class="btn btn-sm btn-outline-info">
-                                                            <i class="fa-solid fa-download me-1"></i>Receipt
+                                                    <div class="btn-group" role="group">
+                                                        <a href="{{ route('patient.appointments.show', $payment->appointment) }}" class="btn btn-sm btn-outline-primary">
+                                                            <i class="fa-solid fa-eye me-1"></i>View Details
                                                         </a>
-                                                    @endif
+                                                        @if($payment->receipt_file_path)
+                                                            <a href="{{ route('patient.payments.receipt', $payment) }}" class="btn btn-sm btn-outline-info">
+                                                                <i class="fa-solid fa-download me-1"></i>Receipt
+                                                            </a>
+                                                        @endif
+                                                        @if($payment->status === 'verified' && $payment->refund_status === 'none')
+                                                            <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#refundModal{{ $payment->id }}">
+                                                                <i class="fa-solid fa-undo me-1"></i>Request Refund
+                                                            </button>
+                                                        @endif
+                                                    </div>
                                                 </td>
                                             </tr>
                                             @endforeach
@@ -160,5 +189,65 @@
         </div>
     </div>
     <!-- /Page Content -->
+
+    <!-- Refund Request Modals -->
+    @foreach($payments as $payment)
+        @if($payment->status === 'verified' && $payment->refund_status === 'none')
+        <div class="modal fade" id="refundModal{{ $payment->id }}" tabindex="-1" aria-labelledby="refundModalLabel{{ $payment->id }}" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="refundModalLabel{{ $payment->id }}">Request Refund</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="{{ route('patient.payments.request-refund', $payment) }}" method="POST">
+                        @csrf
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="refund_amount{{ $payment->id }}" class="form-label">Refund Amount</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="refund_amount{{ $payment->id }}" 
+                                           name="refund_amount" 
+                                           step="0.01" 
+                                           min="0" 
+                                           max="{{ $payment->amount }}" 
+                                           value="{{ $payment->amount }}"
+                                           required>
+                                </div>
+                                <small class="text-muted">Maximum refundable amount: ${{ number_format($payment->amount, 2) }}</small>
+                            </div>
+                            <div class="mb-3">
+                                <label for="refund_reason{{ $payment->id }}" class="form-label">Reason for Refund <span class="text-danger">*</span></label>
+                                <textarea class="form-control" 
+                                          id="refund_reason{{ $payment->id }}" 
+                                          name="refund_reason" 
+                                          rows="4" 
+                                          placeholder="Please provide a detailed reason for your refund request (minimum 10 characters)" 
+                                          required 
+                                          minlength="10">{{ old('refund_reason') }}</textarea>
+                                @error('refund_reason')
+                                    <div class="text-danger small">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="alert alert-info">
+                                <i class="fa-solid fa-info-circle me-2"></i>
+                                <strong>Note:</strong> Your refund request will be reviewed by the admin and psychologist. You will be notified once a decision is made.
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fa-solid fa-paper-plane me-1"></i>Submit Request
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        @endif
+    @endforeach
 @endsection
 

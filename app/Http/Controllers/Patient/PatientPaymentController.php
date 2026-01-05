@@ -76,7 +76,7 @@ class PatientPaymentController extends Controller
         app(NotificationService::class)->notifyPaymentUploaded($payment);
 
         return redirect()->route('patient.appointments.show', $appointment)
-            ->withSuccess('Payment receipt uploaded successfully. Waiting for admin verification.');
+            ->withSuccess('Payment receipt uploaded successfully. Waiting for psychologist verification.');
     }
 
     public function index()
@@ -113,5 +113,44 @@ class PatientPaymentController extends Controller
         $fileName = 'receipt-' . $payment->id . '.' . pathinfo($filePath, PATHINFO_EXTENSION);
 
         return response()->download($filePath, $fileName);
+    }
+
+    public function requestRefund(Request $request, Payment $payment)
+    {
+        $patient = Auth::user()->patient;
+
+        if (!$patient || $payment->appointment->patient_id !== $patient->id) {
+            abort(403, 'Unauthorized');
+        }
+
+        // Check if payment is verified
+        if ($payment->status !== 'verified') {
+            return redirect()->back()->withErrors('Only verified payments can be refunded.');
+        }
+
+        // Check if refund already requested
+        if ($payment->refund_status !== 'none') {
+            return redirect()->back()->withErrors('Refund request already exists for this payment.');
+        }
+
+        $request->validate([
+            'refund_reason' => 'required|string|min:10|max:1000',
+            'refund_amount' => 'nullable|numeric|min:0|max:' . $payment->amount,
+        ]);
+
+        $refundAmount = $request->refund_amount ?? $payment->amount;
+
+        $payment->update([
+            'refund_status' => 'requested',
+            'refund_reason' => $request->refund_reason,
+            'refund_amount' => $refundAmount,
+            'refund_requested_at' => now(),
+            'refund_requested_by' => Auth::id(),
+        ]);
+
+        // Send notification to admin and psychologist
+        app(NotificationService::class)->notifyRefundRequested($payment);
+
+        return redirect()->back()->withSuccess('Refund request submitted successfully. We will review your request and get back to you soon.');
     }
 }
