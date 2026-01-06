@@ -408,7 +408,7 @@
 
                         <a href="{{ url('signup') }}"
                             class="btn btn-md btn-primary-gradient d-inline-flex align-items-center rounded-pill"><i
-                                class="isax isax-lock-1 me-1"></i>Sign Up</a>
+                                class="isax isax-lock-1 me-1"></i>Login</a>
                     </li>
                     <li>
                         <a href="{{ url('register') }}" class="btn btn-md btn-dark d-inline-flex align-items-center rounded-pill">

@@ -12,7 +12,7 @@
                 <div class="account-content">
                     <div class="account-info">
                         <div class="login-title">
-                            <h3>Signup</h3>
+                            <h3>Login</h3>
                         </div>
                         <div class="signup-option-btns">
                             <a href="{{url('doctor-signup')}}" class="signup-btn-info">

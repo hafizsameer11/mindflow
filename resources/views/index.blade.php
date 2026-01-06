@@ -121,7 +121,7 @@
                                     <p class="mb-1">Consultation Fees</p>
                                     <h3 class="text-orange">$650</h3>
                                 </div>
-                                <a href="#" class="btn btn-md btn-dark inline-flex align-items-center rounded-pill">
+                                <a href="{{ url('patient/login') }}" class="btn btn-md btn-dark inline-flex align-items-center rounded-pill">
                                     <i class="isax isax-calendar-1 me-2"></i>
                                     Book Now
                                 </a>
@@ -156,7 +156,7 @@
                                     <p class="mb-1">Consultation Fees</p>
                                     <h3 class="text-orange">$400</h3>
                                 </div>
-                                <a href="#" class="btn btn-md btn-dark inline-flex align-items-center rounded-pill">
+                                <a href="{{ url('patient/login') }}" class="btn btn-md btn-dark inline-flex align-items-center rounded-pill">
                                     <i class="isax isax-calendar-1 me-2"></i>
                                     Book Now
                                 </a>
@@ -191,7 +191,7 @@
                                     <p class="mb-1">Consultation Fees</p>
                                     <h3 class="text-orange">$500</h3>
                                 </div>
-                                <a href="#" class="btn btn-md btn-dark inline-flex align-items-center rounded-pill">
+                                <a href="{{ url('patient/login') }}" class="btn btn-md btn-dark inline-flex align-items-center rounded-pill">
                                     <i class="isax isax-calendar-1 me-2"></i>
                                     Book Now
                                 </a>
@@ -226,7 +226,7 @@
                                     <p class="mb-1">Consultation Fees</p>
                                     <h3 class="text-orange">$550</h3>
                                 </div>
-                                <a href="#" class="btn btn-md btn-dark inline-flex align-items-center rounded-pill">
+                                <a href="{{ url('patient/login') }}" class="btn btn-md btn-dark inline-flex align-items-center rounded-pill">
                                     <i class="isax isax-calendar-1 me-2"></i>
                                     Book Now
                                 </a>
@@ -261,7 +261,7 @@
                                     <p class="mb-1">Consultation Fees</p>
                                     <h3 class="text-orange">$600</h3>
                                 </div>
-                                <a href="#" class="btn btn-md btn-dark inline-flex align-items-center rounded-pill">
+                                <a href="{{ url('patient/login') }}" class="btn btn-md btn-dark inline-flex align-items-center rounded-pill">
                                     <i class="isax isax-calendar-1 me-2"></i>
                                     Book Now
                                 </a>
@@ -296,7 +296,7 @@
                                     <p class="mb-1">Consultation Fees</p>
                                     <h3 class="text-orange">$450</h3>
                                 </div>
-                                <a href="#" class="btn btn-md btn-dark inline-flex align-items-center rounded-pill">
+                                <a href="{{ url('patient/login') }}" class="btn btn-md btn-dark inline-flex align-items-center rounded-pill">
                                     <i class="isax isax-calendar-1 me-2"></i>
                                     Book Now
                                 </a>
@@ -331,7 +331,7 @@
                                     <p class="mb-1">Consultation Fees</p>
                                     <h3 class="text-orange">$520</h3>
                                 </div>
-                                <a href="#" class="btn btn-md btn-dark inline-flex align-items-center rounded-pill">
+                                <a href="{{ url('patient/login') }}" class="btn btn-md btn-dark inline-flex align-items-center rounded-pill">
                                     <i class="isax isax-calendar-1 me-2"></i>
                                     Book Now
                                 </a>
@@ -366,7 +366,7 @@
                                     <p class="mb-1">Consultation Fees</p>
                                     <h3 class="text-orange">$480</h3>
                                 </div>
-                                <a href="#" class="btn btn-md btn-dark inline-flex align-items-center rounded-pill">
+                                <a href="{{ url('patient/login') }}" class="btn btn-md btn-dark inline-flex align-items-center rounded-pill">
                                     <i class="isax isax-calendar-1 me-2"></i>
                                     Book Now
                                 </a>

@@ -1,7 +1,27 @@
 <?php $page = 'doctor-register'; ?>
 @extends('layout.mainlayout')
 @section('content')
-  
+<style>
+    .login-left {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        height: 0 !important;
+        width: 0 !important;
+        overflow: hidden !important;
+    }
+    .login-left img,
+    img[src*="login-banner"] {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        height: 0 !important;
+        width: 0 !important;
+    }
+    .col-md-7.col-lg-6.login-left {
+        display: none !important;
+    }
+</style>
 <!-- Page Content -->
 <div class="content">
     <div class="container-fluid">
@@ -12,9 +32,6 @@
                 <!-- Register Tab Content -->
                 <div class="account-content">
                     <div class="row align-items-center justify-content-center">
-                        <div class="col-md-7 col-lg-6 login-left">
-                            <img src="{{URL::asset('assets/img/login-banner.png')}}" class="img-fluid" alt="Doccure Register">	
-                        </div>
                         <div class="col-md-12 col-lg-6 login-right">
                             <div class="login-header">
                                 <h3>Psychologist Register <a href="{{url('psychologist/login')}}">Already have an account?</a></h3>
@@ -211,10 +228,10 @@
                                 </div>
                                 <div class="social-login-btn">
                                     <a href="javascript:void(0);" class="btn w-100">
-                                        <img src="{{URL::asset('assets/img/icons/google-icon.svg')}}" alt="google-icon">Sign up With Google
+                                        <img src="{{ asset('assets/img/icons/google-icon.svg') }}" alt="google-icon">Sign up With Google
                                     </a>
                                     <a href="javascript:void(0);" class="btn w-100">
-                                        <img src="{{URL::asset('assets/img/icons/facebook-icon.svg')}}" alt="fb-icon">Sign up With Facebook
+                                        <img src="{{ asset('assets/img/icons/facebook-icon.svg') }}" alt="fb-icon">Sign up With Facebook
                                     </a>
                                 </div>
                                 <div class="account-signup">
@@ -238,6 +255,46 @@
 
 @push('scripts')
 <script>
+    // Remove login banner image immediately and on load
+    (function() {
+        function removeLoginBanner() {
+            // Remove the image directly
+            var images = document.querySelectorAll('img[src*="login-banner"]');
+            images.forEach(function(img) {
+                img.style.display = 'none';
+                img.remove();
+            });
+            
+            // Remove the login-left div
+            var loginLeft = document.querySelectorAll('.login-left');
+            loginLeft.forEach(function(div) {
+                div.style.display = 'none';
+                div.remove();
+            });
+            
+            // Also check for col-md-7 col-lg-6 login-left
+            var loginLeftCol = document.querySelectorAll('.col-md-7.col-lg-6.login-left');
+            loginLeftCol.forEach(function(div) {
+                div.style.display = 'none';
+                div.remove();
+            });
+        }
+        
+        // Run immediately
+        removeLoginBanner();
+        
+        // Run on DOM ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', removeLoginBanner);
+        } else {
+            removeLoginBanner();
+        }
+        
+        // Run after a short delay to catch any dynamically added content
+        setTimeout(removeLoginBanner, 100);
+        setTimeout(removeLoginBanner, 500);
+    })();
+
     // File preview functionality
     document.getElementById('qualification_files').addEventListener('change', function(e) {
         const preview = document.getElementById('filePreview');

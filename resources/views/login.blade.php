@@ -1,4 +1,4 @@
-<?php $page = 'patient-signup'; ?>
+<?php $page = 'login'; ?>
 @extends('layout.mainlayout')
 @section('content')
 <style>
