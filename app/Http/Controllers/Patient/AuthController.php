@@ -69,7 +69,7 @@ class AuthController extends Controller
         
         // Try Auth::attempt first
         if (Auth::attempt($credentials)) {
-            return redirect()->intended('patient/dashboard')->withSuccess('Signed in');
+            return redirect()->route('patient.dashboard')->withSuccess('Signed in');
         }
         
         // If Auth::attempt fails, manually check password (in case of double-hashing issue)
@@ -88,7 +88,7 @@ class AuthController extends Controller
         if ($passwordCheck) {
             // Password is correct but Auth::attempt failed - manually log in
             Auth::login($user);
-            return redirect()->intended('patient/dashboard')->withSuccess('Signed in');
+            return redirect()->route('patient.dashboard')->withSuccess('Signed in');
         }
 
         return redirect()->back()->withErrors(['email' => 'Invalid password. The password you entered is incorrect. Please try again or reset your password.'])->withInput($request->only('email'));

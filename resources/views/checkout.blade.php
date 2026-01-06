@@ -100,7 +100,7 @@
 
                                     <!-- Submit Section -->
                                     <div class="submit-section mt-4">
-                                        <button type="submit" class="btn btn-primary submit-btn">Confirm and Pay</button>
+                                        <button type="submit" class="btn btn-primary submit-btn">Confirm</button>
                                     </div>
                                     <!-- /Submit Section -->
 

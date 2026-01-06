@@ -403,7 +403,7 @@
             <ul class="nav header-navbar-rht">
 
 
-                @if (!Route::is(['index-4']))
+                @if (!Route::is(['index-4']) && !(Auth::check() && (request()->is('patient/*') || request()->is('psychologist/*'))))
                     <li>
 
                         <a href="{{ url('signup') }}"
@@ -746,206 +746,36 @@
                     </a>
                 </li>
 
-                <!-- Notifications -->
-                @auth
-                @php
-                    $headerNotifications = Auth::user()->notifications()
-                        ->where('type', 'App\Notifications\AdminAnnouncementNotification')
-                        ->latest()
-                        ->take(5)
-                        ->get();
-                    $headerUnreadCount = Auth::user()->unreadNotifications()
-                        ->where('type', 'App\Notifications\AdminAnnouncementNotification')
-                        ->count();
-                @endphp
-                <li class="nav-item dropdown noti-nav me-3 pe-0">
-                    <a href="#" class="dropdown-toggle {{ $headerUnreadCount > 0 ? 'active-dot active-dot-danger' : '' }} nav-link p-0"
-                        data-bs-toggle="dropdown">
-                        <i class="isax isax-notification-bing"></i>
-                        @if($headerUnreadCount > 0)
-                            <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle" style="font-size: 10px; padding: 2px 5px;">{{ $headerUnreadCount > 9 ? '9+' : $headerUnreadCount }}</span>
-                        @endif
-                    </a>
-                    <div class="dropdown-menu notifications dropdown-menu-end">
-                        <div class="topnav-dropdown-header">
-                            <span class="notification-title">Notifications</span>
-                            @if($headerUnreadCount > 0)
-                                <a href="javascript:void(0)" class="clear-noti" onclick="markAllAsRead()">Mark All as Read</a>
-                            @endif
-                        </div>
-                        <div class="noti-content">
-                            <ul class="notification-list">
-                                @forelse($headerNotifications as $notification)
-                                    @php
-                                        $data = $notification->data;
-                                        $isRead = !is_null($notification->read_at);
-                                    @endphp
-                                    <li class="notification-message {{ !$isRead ? 'unread' : '' }}">
-                                        <a href="javascript:void(0)" onclick="markAsRead('{{ $notification->id }}')">
-                                            <div class="notify-block d-flex">
-                                                <span class="avatar">
-                                                    <i class="fa-solid fa-bullhorn" style="font-size: 20px; padding: 8px;"></i>
-                                                </span>
-                                                <div class="media-body">
-                                                    <h6>
-                                                        {{ $data['title'] ?? 'Announcement' }}
-                                                        <span class="notification-time">{{ $notification->created_at->diffForHumans() }}</span>
-                                                    </h6>
-                                                    <p class="noti-details">{{ Str::limit($data['message'] ?? '', 60) }}</p>
-                                                    @if(isset($data['priority']) && in_array($data['priority'], ['urgent', 'high']))
-                                                        <span class="badge bg-{{ $data['priority'] == 'urgent' ? 'danger' : 'warning' }} badge-sm">{{ ucfirst($data['priority']) }}</span>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        </a>
-                                    </li>
-                                @empty
-                                    <li class="notification-message">
-                                        <div class="notify-block d-flex">
-                                            <div class="media-body text-center py-3">
-                                                <p class="text-muted mb-0">No notifications</p>
-                                            </div>
-                                        </div>
-                                    </li>
-                                @endforelse
-                            </ul>
-                        </div>
-                        @if($headerNotifications->count() > 0)
-                            <div class="topnav-dropdown-footer text-center">
-                                <a href="{{ Auth::user()->isPatient() ? route('patient.dashboard') : (Auth::user()->isPsychologist() ? route('psychologist.dashboard') : '#') }}">View All</a>
-                            </div>
-                        @endif
-                    </div>
-                </li>
-                @else
-                <li class="nav-item dropdown noti-nav me-3 pe-0">
-                    <a href="#" class="dropdown-toggle nav-link p-0" data-bs-toggle="dropdown">
-                        <i class="isax isax-notification-bing"></i>
-                    </a>
-                    <div class="dropdown-menu notifications dropdown-menu-end">
-                        <div class="topnav-dropdown-header">
-                            <span class="notification-title">Notifications</span>
-                        </div>
-                        <div class="noti-content">
-                            <ul class="notification-list">
-                                <li class="notification-message">
-                                    <div class="notify-block d-flex">
-                                        <div class="media-body text-center py-3">
-                                            <p class="text-muted mb-0">Please login to view notifications</p>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </li>
-                @endauth
-                <!-- /Notifications -->
-
-                <!-- Messages -->
-                <li class="nav-item noti-nav me-3 pe-0">
-                    <a href="{{ url('chat-doctor') }}"
-                        class="dropdown-toggle nav-link active-dot active-dot-success p-0">
-                        <i class="isax isax-message-2"></i>
-                    </a>
-                </li>
-                <!-- /Messages -->
-
-                <!-- Cart -->
-                <li class="nav-item dropdown noti-nav view-cart-header me-3 pe-0">
-                    <a href="#"
-                        class="dropdown-toggle nav-link active-dot active-dot-purple p-0 position-relative"
-                        data-bs-toggle="dropdown">
-                        <i class="isax isax-shopping-cart"></i>
-                    </a>
-                    <div class="dropdown-menu notifications dropdown-menu-end">
-                        <div class="shopping-cart">
-                            <ul class="shopping-cart-items list-unstyled">
-                                <li class="clearfix">
-                                    <div class="close-icon"><i class="fa-solid fa-circle-xmark"></i></div>
-                                    <a href="{{ url('product-description') }}"><img class="avatar-img rounded"
-                                            src="{{ URL::asset('assets/img/products/product.jpg') }}"
-                                            alt="User Image"></a>
-                                    <a href="{{ url('product-description') }}" class="item-name">Benzaxapine
-                                        Croplex</a>
-                                    <span class="item-price">$849.99</span>
-                                    <span class="item-quantity">Quantity: 01</span>
-                                </li>
-
-                                <li class="clearfix">
-                                    <div class="close-icon"><i class="fa-solid fa-circle-xmark"></i></div>
-                                    <a href="{{ url('product-description') }}"><img class="avatar-img rounded"
-                                            src="{{ URL::asset('assets/img/products/product1.jpg') }}"
-                                            alt="User Image"></a>
-                                    <a href="{{ url('product-description') }}" class="item-name">Ombinazol
-                                        Bonibamol</a>
-                                    <span class="item-price">$1,249.99</span>
-                                    <span class="item-quantity">Quantity: 01</span>
-                                </li>
-
-                                <li class="clearfix">
-                                    <div class="close-icon"><i class="fa-solid fa-circle-xmark"></i></div>
-                                    <a href="{{ url('product-description') }}"><img class="avatar-img rounded"
-                                            src="{{ URL::asset('assets/img/products/product2.jpg') }}"
-                                            alt="User Image"></a>
-                                    <a href="{{ url('product-description') }}" class="item-name">Dantotate
-                                        Dantodazole</a>
-                                    <span class="item-price">$129.99</span>
-                                    <span class="item-quantity">Quantity: 01</span>
-                                </li>
-                            </ul>
-                            <div class="booking-summary pt-3">
-                                <div class="booking-item-wrap">
-                                    <ul class="booking-date">
-                                        <li>Subtotal <span>$5,877.00</span></li>
-                                        <li>Shipping <span>$25.00</span></li>
-                                        <li>Tax <span>$0.00</span></li>
-                                        <li>Total <span>$5.2555</span></li>
-                                    </ul>
-                                    <div class="booking-total">
-                                        <ul class="booking-total-list text-align">
-                                            <li>
-                                                <div class="clinic-booking pt-3">
-                                                    <a class="apt-btn" href="{{ url('cart') }}">View Cart</a>
-                                                </div>
-                                            </li>
-                                            <li>
-                                                <div class="clinic-booking pt-3">
-                                                    <a class="apt-btn"
-                                                        href="{{ url('product-checkout') }}">Checkout</a>
-                                                </div>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </li>
-                <!-- /Cart -->
 
                 <!-- User Menu -->
+                @php
+                    $headerUser = Auth::user();
+                    $headerProfileImage = $headerUser && $headerUser->profile_image 
+                        ? asset('storage/' . $headerUser->profile_image) 
+                        : asset('assets/img/doctors-dashboard/doctor-profile-img.jpg');
+                    $headerUserName = $headerUser ? $headerUser->name : 'User';
+                @endphp
                 <li class="nav-item dropdown has-arrow logged-item">
                     <a href="#" class="nav-link ps-0" data-bs-toggle="dropdown">
                         <span class="user-img">
                             <img class="rounded-circle"
-                                src="{{ URL::asset('assets/img/doctors-dashboard/doctor-profile-img.jpg') }}"
-                                width="31" alt="Darren Elder">
+                                src="{{ $headerProfileImage }}"
+                                width="31" alt="{{ $headerUserName }}">
                         </span>
                     </a>
                     <div class="dropdown-menu dropdown-menu-end">
                         <div class="user-header">
                             <div class="avatar avatar-sm">
-                                <img src="{{ URL::asset('assets/img/doctors-dashboard/doctor-profile-img.jpg') }}"
+                                <img src="{{ $headerProfileImage }}"
                                     alt="User Image" class="avatar-img rounded-circle">
                             </div>
                             <div class="user-text">
-                                <h6>Dr Edalin Hendry</h6>
-                                <p class="text-muted mb-0">Doctor</p>
+                                <h6>{{ $headerUserName }}</h6>
+                                <p class="text-muted mb-0">Psychologist</p>
                             </div>
                         </div>
-                        <a class="dropdown-item" href="{{ url('doctor-dashboard') }}">Dashboard</a>
-                        <a class="dropdown-item" href="{{ url('doctor-profile-settings') }}">Profile Settings</a>
+                        <a class="dropdown-item" href="{{ route('psychologist.dashboard') }}">Dashboard</a>
+                        <a class="dropdown-item" href="{{ route('psychologist.profile') }}">Profile Settings</a>
                         <form method="POST" action="{{ route('psychologist.logout') }}" class="d-inline">
                             @csrf
                             <button type="submit" class="dropdown-item border-0 bg-transparent text-start w-100" style="padding: 0.5rem 1rem;">Logout</button>
@@ -1008,208 +838,40 @@
                     </a>
                 </li>
 
-                <!-- Notifications -->
-                @auth
-                @php
-                    if (!isset($headerNotifications)) {
-                        $headerNotifications = Auth::user()->notifications()
-                            ->where('type', 'App\Notifications\AdminAnnouncementNotification')
-                            ->latest()
-                            ->take(5)
-                            ->get();
-                        $headerUnreadCount = Auth::user()->unreadNotifications()
-                            ->where('type', 'App\Notifications\AdminAnnouncementNotification')
-                            ->count();
-                    }
-                @endphp
-                <li class="nav-item dropdown noti-nav me-3 pe-0">
-                    <a href="#" class="dropdown-toggle {{ $headerUnreadCount > 0 ? 'active-dot active-dot-danger' : '' }} nav-link p-0"
-                        data-bs-toggle="dropdown">
-                        <i class="isax isax-notification-bing"></i>
-                        @if($headerUnreadCount > 0)
-                            <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle" style="font-size: 10px; padding: 2px 5px;">{{ $headerUnreadCount > 9 ? '9+' : $headerUnreadCount }}</span>
-                        @endif
-                    </a>
-                    <div class="dropdown-menu notifications dropdown-menu-end">
-                        <div class="topnav-dropdown-header">
-                            <span class="notification-title">Notifications</span>
-                            @if($headerUnreadCount > 0)
-                                <a href="javascript:void(0)" class="clear-noti" onclick="markAllAsRead()">Mark All as Read</a>
-                            @endif
-                        </div>
-                        <div class="noti-content">
-                            <ul class="notification-list">
-                                @forelse($headerNotifications as $notification)
-                                    @php
-                                        $data = $notification->data;
-                                        $isRead = !is_null($notification->read_at);
-                                    @endphp
-                                    <li class="notification-message {{ !$isRead ? 'unread' : '' }}">
-                                        <a href="javascript:void(0)" onclick="markAsRead('{{ $notification->id }}')">
-                                            <div class="notify-block d-flex">
-                                                <span class="avatar">
-                                                    <i class="fa-solid fa-bullhorn" style="font-size: 20px; padding: 8px;"></i>
-                                                </span>
-                                                <div class="media-body">
-                                                    <h6>
-                                                        {{ $data['title'] ?? 'Announcement' }}
-                                                        <span class="notification-time">{{ $notification->created_at->diffForHumans() }}</span>
-                                                    </h6>
-                                                    <p class="noti-details">{{ Str::limit($data['message'] ?? '', 60) }}</p>
-                                                    @if(isset($data['priority']) && in_array($data['priority'], ['urgent', 'high']))
-                                                        <span class="badge bg-{{ $data['priority'] == 'urgent' ? 'danger' : 'warning' }} badge-sm">{{ ucfirst($data['priority']) }}</span>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        </a>
-                                    </li>
-                                @empty
-                                    <li class="notification-message">
-                                        <div class="notify-block d-flex">
-                                            <div class="media-body text-center py-3">
-                                                <p class="text-muted mb-0">No notifications</p>
-                                            </div>
-                                        </div>
-                                    </li>
-                                @endforelse
-                            </ul>
-                        </div>
-                        @if($headerNotifications->count() > 0)
-                            <div class="topnav-dropdown-footer text-center">
-                                <a href="{{ Auth::user()->isPatient() ? route('patient.dashboard') : (Auth::user()->isPsychologist() ? route('psychologist.dashboard') : '#') }}">View All</a>
-                            </div>
-                        @endif
-                    </div>
-                </li>
-                @else
-                <li class="nav-item dropdown noti-nav me-3 pe-0">
-                    <a href="#" class="dropdown-toggle nav-link p-0" data-bs-toggle="dropdown">
-                        <i class="isax isax-notification-bing"></i>
-                    </a>
-                    <div class="dropdown-menu notifications dropdown-menu-end">
-                        <div class="topnav-dropdown-header">
-                            <span class="notification-title">Notifications</span>
-                        </div>
-                        <div class="noti-content">
-                            <ul class="notification-list">
-                                <li class="notification-message">
-                                    <div class="notify-block d-flex">
-                                        <div class="media-body text-center py-3">
-                                            <p class="text-muted mb-0">Please login to view notifications</p>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </li>
-                @endauth
-                <!-- /Notifications -->
-
-                <!-- Messages -->
-                <li class="nav-item noti-nav me-3 pe-0">
-                    <a href="{{ url('chat') }}" class="dropdown-toggle nav-link active-dot active-dot-success p-0">
-                        <i class="isax isax-message-2"></i>
-                    </a>
-                </li>
-                <!-- /Messages -->
-
-                <!-- Cart -->
-                <li class="nav-item dropdown noti-nav view-cart-header me-3 pe-0">
-                    <a href="#"
-                        class="dropdown-toggle nav-link active-dot active-dot-purple p-0 position-relative"
-                        data-bs-toggle="dropdown">
-                        <i class="isax isax-shopping-cart"></i>
-                    </a>
-                    <div class="dropdown-menu notifications dropdown-menu-end">
-                        <div class="shopping-cart">
-                            <ul class="shopping-cart-items list-unstyled">
-                                <li class="clearfix">
-                                    <div class="close-icon"><i class="fa-solid fa-circle-xmark"></i></div>
-                                    <a href="{{ url('product-description') }}"><img class="avatar-img rounded"
-                                            src="{{ URL::asset('assets/img/products/product.jpg') }}"
-                                            alt="User Image"></a>
-                                    <a href="{{ url('product-description') }}" class="item-name">Benzaxapine
-                                        Croplex</a>
-                                    <span class="item-price">$849.99</span>
-                                    <span class="item-quantity">Quantity: 01</span>
-                                </li>
-
-                                <li class="clearfix">
-                                    <div class="close-icon"><i class="fa-solid fa-circle-xmark"></i></div>
-                                    <a href="{{ url('product-description') }}"><img class="avatar-img rounded"
-                                            src="{{ URL::asset('assets/img/products/product1.jpg') }}"
-                                            alt="User Image"></a>
-                                    <a href="{{ url('product-description') }}" class="item-name">Ombinazol
-                                        Bonibamol</a>
-                                    <span class="item-price">$1,249.99</span>
-                                    <span class="item-quantity">Quantity: 01</span>
-                                </li>
-
-                                <li class="clearfix">
-                                    <div class="close-icon"><i class="fa-solid fa-circle-xmark"></i></div>
-                                    <a href="{{ url('product-description') }}"><img class="avatar-img rounded"
-                                            src="{{ URL::asset('assets/img/products/product2.jpg') }}"
-                                            alt="User Image"></a>
-                                    <a href="{{ url('product-description') }}" class="item-name">Dantotate
-                                        Dantodazole</a>
-                                    <span class="item-price">$129.99</span>
-                                    <span class="item-quantity">Quantity: 01</span>
-                                </li>
-                            </ul>
-                            <div class="booking-summary pt-3">
-                                <div class="booking-item-wrap">
-                                    <ul class="booking-date">
-                                        <li>Subtotal <span>$5,877.00</span></li>
-                                        <li>Shipping <span>$25.00</span></li>
-                                        <li>Tax <span>$0.00</span></li>
-                                        <li>Total <span>$5.2555</span></li>
-                                    </ul>
-                                    <div class="booking-total">
-                                        <ul class="booking-total-list text-align">
-                                            <li>
-                                                <div class="clinic-booking pt-3">
-                                                    <a class="apt-btn" href="{{ url('cart') }}">View Cart</a>
-                                                </div>
-                                            </li>
-                                            <li>
-                                                <div class="clinic-booking pt-3">
-                                                    <a class="apt-btn"
-                                                        href="{{ url('product-checkout') }}">Checkout</a>
-                                                </div>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </li>
-                <!-- /Cart -->
 
                 <!-- User Menu -->
+                @php
+                    $headerUser = Auth::user();
+                    $headerProfileImage = $headerUser && $headerUser->profile_image 
+                        ? asset('storage/' . $headerUser->profile_image) 
+                        : asset('assets/img/doctors-dashboard/profile-06.jpg');
+                    $headerUserName = $headerUser ? $headerUser->name : 'User';
+                @endphp
                 <li class="nav-item dropdown has-arrow logged-item">
                     <a href="#" class="nav-link ps-0" data-bs-toggle="dropdown">
                         <span class="user-img">
                             <img class="rounded-circle"
-                                src="{{ URL::asset('assets/img/doctors-dashboard/profile-06.jpg') }}" width="31"
-                                alt="Darren Elder">
+                                src="{{ $headerProfileImage }}" width="31"
+                                alt="{{ $headerUserName }}">
                         </span>
                     </a>
                     <div class="dropdown-menu dropdown-menu-end">
                         <div class="user-header">
                             <div class="avatar avatar-sm">
-                                <img src="{{ URL::asset('assets/img/doctors-dashboard/profile-06.jpg') }}"
+                                <img src="{{ $headerProfileImage }}"
                                     alt="User Image" class="avatar-img rounded-circle">
                             </div>
                             <div class="user-text">
-                                <h6>Hendrita Hayes</h6>
+                                <h6>{{ $headerUserName }}</h6>
                                 <p class="text-muted mb-0">Patient</p>
                             </div>
                         </div>
-                        <a class="dropdown-item" href="{{ url('patient-dashboard') }}">Dashboard</a>
-                        <a class="dropdown-item" href="{{ url('profile-settings') }}">Profile Settings</a>
-                        <a class="dropdown-item" href="#">Logout</a>
+                        <a class="dropdown-item" href="{{ route('patient.dashboard') }}">Dashboard</a>
+                        <a class="dropdown-item" href="{{ route('patient.profile') }}">Profile Settings</a>
+                        <form method="POST" action="{{ route('patient.logout') }}" class="d-inline">
+                            @csrf
+                            <button type="submit" class="dropdown-item border-0 bg-transparent text-start w-100" style="padding: 0.5rem 1rem;">Logout</button>
+                        </form>
                     </div>
                 </li>
                 <!-- /User Menu -->

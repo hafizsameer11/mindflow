@@ -127,6 +127,10 @@ class PsychologistAppointmentController extends Controller
         // Send notification
         app(NotificationService::class)->notifyAppointmentCancelled($appointment);
 
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Appointment cancelled successfully.']);
+        }
+
         return redirect()->back()->withSuccess('Appointment cancelled successfully.');
     }
 

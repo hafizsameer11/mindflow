@@ -50,9 +50,6 @@
                         <i class="fe fe-shield"></i> <span>Data Security & Backup</span>
                     </a>
                 </li>
-                <li class="{{ Request::is('admin/settings') ? 'active' : '' }}">
-                    <a href="{{ url('admin/settings') }}"><i class="fe fe-vector"></i> <span>Settings</span></a>
-                </li>
                 <li class="submenu">
                     <a href="javascript:;"><i class="fe fe-document"></i> <span> Reports</span> <span
                             class="menu-arrow"></span></a>

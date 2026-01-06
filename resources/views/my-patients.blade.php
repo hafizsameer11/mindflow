@@ -19,72 +19,8 @@
 
 				<div class="row">
 					<div class="col-lg-4 col-xl-3 theiaStickySidebar">
-
-						<!-- Profile Sidebar -->
-							<div class="profile-sidebar doctor-sidebar profile-sidebar-new">
-								<div class="widget-profile pro-widget-content">
-									<div class="profile-info-widget">
-										<a href="{{url('doctor-profile')}}" class="booking-doc-img">
-											<img src="{{URL::asset('assets/img/doctors-dashboard/doctor-profile-img.jpg')}}" alt="User Image">
-										</a>
-										<div class="profile-det-info">
-											<h3><a href="{{ route('psychologist.profile') }}">{{ $psychologist->user->name ?? 'Psychologist' }}</a></h3>
-											<div class="patient-details">
-												<h5 class="mb-0">{{ $psychologist->specialization ?? 'Specialization' }}</h5>
-											</div>
-											<span class="badge doctor-role-badge"><i class="fa-solid fa-circle"></i>Psychologist</span>
-										</div>
-									</div>
-								</div>
-								<div class="doctor-available-head">
-									<div class="input-block input-block-new">
-										<label class="form-label">Availability <span class="text-danger">*</span></label>
-										<select class="select form-control">
-											<option>I am Available Now</option>
-											<option>Not Available</option>
-										</select>
-									</div>
-								</div>
-								<div class="dashboard-widget">
-									<nav class="dashboard-menu">
-										<ul>
-											<li>
-												<a href="{{url('doctor-dashboard')}}">
-													<i class="isax isax-category-2"></i>
-													<span>Dashboard</span>
-												</a>
-											</li>
-											<li>
-												<a href="{{url('doctor-request')}}">
-													<i class="isax isax-clipboard-tick"></i>
-													<span>Requests</span>
-													<small class="unread-msg">2</small>
-												</a>
-											</li>
-											<li>
-												<a href="{{url('appointments')}}">
-													<i class="isax isax-calendar-1"></i>
-													<span>Appointments</span>
-												</a>
-											</li>
-											<li>
-												<a href="{{url('available-timings')}}">
-													<i class="isax isax-calendar-tick"></i>
-													<span>Available Timings</span>
-												</a>
-											</li>
-											<li class="active">
-												<a href="{{url('my-patients')}}">
-													<i class="fa-solid fa-user-injured"></i>
-													<span>My Patients</span>
-												</a>
-											</li>
-										</ul>
-									</nav>
-								</div>
-							</div>
-							<!-- /Profile Sidebar -->
-
+						@component('components.sidebar_doctor')
+						@endcomponent
 					</div>
 					<div class="col-lg-8 col-xl-9">
 

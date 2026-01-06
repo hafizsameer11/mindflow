@@ -429,7 +429,7 @@
                                 <ul>
                                     <li><a href="{{ url('index') }}">Home</a></li>
                                     <li><a href="{{ url('search') }}">Doctors</a></li>
-                                    <li><a href="{{ url('my-patients') }}">Patients</a></li>
+                                    <li><a href="{{ Auth::check() && Auth::user()->isPsychologist() ? route('psychologist.my-patients') : 'javascript:void(0);' }}">Patients</a></li>
                                     <li><a href="{{ url('pharmacy-index') }}">Pharmacy</a></li>
                                     <li><a href="{{ url('about-us') }}">Pages</a></li>
                                 </ul>

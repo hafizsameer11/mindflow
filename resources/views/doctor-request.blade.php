@@ -73,7 +73,7 @@
                                         </a>
                                     </li>
                                     <li>
-                                        <a href="{{url('my-patients')}}">
+                                        <a href="{{ route('psychologist.my-patients') }}">
                                             <i class="fa-solid fa-user-injured"></i>
                                             <span>My Patients</span>
                                         </a>

@@ -46,6 +46,7 @@ class PsychologistController extends Controller
 
         $recent_appointments = Appointment::with(['patient.user', 'psychologist'])
             ->where('psychologist_id', $psychologist->id)
+            ->where('status', '!=', 'cancelled')
             ->latest()
             ->take(10)
             ->get();
@@ -172,10 +173,30 @@ class PsychologistController extends Controller
             'weeklyRevenue',
             'weeklyAppointments',
             'refund_requests',
-            'refund_stats',
-            'notifications', 
-            'unreadCount'
+            'refund_stats'
         ));
+    }
+
+    public function notifications()
+    {
+        $psychologist = Auth::user()->psychologist;
+        
+        if (!$psychologist) {
+            return redirect()->route('psychologist.profile');
+        }
+
+        // Get all notifications (announcements) with pagination
+        $notifications = Auth::user()->notifications()
+            ->where('type', 'App\Notifications\AdminAnnouncementNotification')
+            ->latest()
+            ->paginate(20);
+
+        // Get unread notification count
+        $unreadCount = Auth::user()->unreadNotifications()
+            ->where('type', 'App\Notifications\AdminAnnouncementNotification')
+            ->count();
+
+        return view('psychologist.notifications.index', compact('notifications', 'unreadCount'));
     }
 
     public function profile()

@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 use App\Http\Controllers\CustomAuthController;
 use App\Http\Controllers\AuthCustomController;
 use App\Http\Controllers\Patient\AuthController as PatientAuthController;
@@ -83,6 +84,8 @@ Route::middleware(['auth'])->group(function () {
 // Patient Routes
 Route::middleware(['auth', 'role:patient'])->prefix('patient')->name('patient.')->group(function () {
     Route::get('dashboard', [PatientController::class, 'dashboard'])->name('dashboard');
+    Route::get('history', [PatientController::class, 'history'])->name('history');
+    Route::get('notifications', [PatientController::class, 'notifications'])->name('notifications');
     Route::get('profile', [PatientController::class, 'profile'])->name('profile');
     Route::post('profile', [PatientController::class, 'updateProfile'])->name('profile.update');
     Route::post('profile/password', [PatientController::class, 'updatePassword'])->name('profile.update-password');
@@ -119,6 +122,7 @@ Route::middleware(['auth', 'role:patient'])->prefix('patient')->name('patient.')
 // Psychologist Routes
 Route::middleware(['auth', 'role:psychologist'])->prefix('psychologist')->name('psychologist.')->group(function () {
     Route::get('dashboard', [PsychologistController::class, 'dashboard'])->name('dashboard');
+    Route::get('notifications', [PsychologistController::class, 'notifications'])->name('notifications');
     Route::get('profile', [PsychologistController::class, 'profile'])->name('profile');
     Route::post('profile', [PsychologistController::class, 'updateProfile'])->name('profile.update');
     Route::get('qualification/{index}', [PsychologistController::class, 'downloadQualification'])->name('qualification.download');
@@ -652,8 +656,76 @@ Route::get('/schedule-timings', function () {
 Route::get('/search-2', function () {
     return view('search-2');
 })->name('search-2');
-Route::get('/search', function () {
-    return view('search');
+Route::get('/search', function (Request $request) {
+    $query = \App\Models\Psychologist::with('user')
+        ->where('verification_status', 'verified')
+        ->withCount(['feedbacks as avg_rating' => function($q) {
+            $q->selectRaw('COALESCE(AVG(rating), 0)');
+        }]);
+
+    // Search by name or specialization
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            $q->whereHas('user', function($subQ) use ($search) {
+                $subQ->where('name', 'like', "%{$search}%");
+            })->orWhere('specialization', 'like', "%{$search}%");
+        });
+    }
+
+    // Filter by specialization
+    if ($request->filled('specialization')) {
+        $query->where('specialization', $request->specialization);
+    }
+
+    // Filter by fee range
+    if ($request->filled('max_fee')) {
+        $query->where('consultation_fee', '<=', $request->max_fee);
+    }
+
+    // Sorting
+    $sortBy = $request->get('sort_by', 'name');
+    
+    switch ($sortBy) {
+        case 'fee_low':
+            $query->orderBy('consultation_fee', 'asc');
+            break;
+        case 'fee_high':
+            $query->orderBy('consultation_fee', 'desc');
+            break;
+        case 'experience':
+            $query->orderBy('experience_years', 'desc');
+            break;
+        case 'rating':
+            $query->orderByRaw('(SELECT AVG(rating) FROM feedbacks WHERE psychologist_id = psychologists.id) DESC');
+            break;
+        case 'name':
+        default:
+            $query->join('users', 'psychologists.user_id', '=', 'users.id')
+                  ->orderBy('users.name', 'asc')
+                  ->select('psychologists.*');
+            break;
+    }
+
+    $psychologists = $query->paginate(12)->appends($request->query());
+
+    // Get all specializations for filter dropdown
+    $specializations = \App\Models\Psychologist::where('verification_status', 'verified')
+        ->distinct()
+        ->pluck('specialization')
+        ->filter()
+        ->sort()
+        ->values();
+
+    // Get min/max values for filters
+    $stats = [
+        'min_fee' => \App\Models\Psychologist::where('verification_status', 'verified')->min('consultation_fee') ?? 0,
+        'max_fee' => \App\Models\Psychologist::where('verification_status', 'verified')->max('consultation_fee') ?? 1000,
+        'min_experience' => \App\Models\Psychologist::where('verification_status', 'verified')->min('experience_years') ?? 0,
+        'max_experience' => \App\Models\Psychologist::where('verification_status', 'verified')->max('experience_years') ?? 50,
+    ];
+
+    return view('search', compact('psychologists', 'specializations', 'stats'));
 })->name('search');
 Route::get('/signup-success', function () {
     return view('signup-success');

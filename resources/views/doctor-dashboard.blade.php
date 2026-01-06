@@ -95,10 +95,7 @@
                                                                 <button type="submit" class="text-success-icon me-2 border-0 bg-transparent"><i class="fa-solid fa-check"></i></button>
                                                             </form>
                                                             @endif
-                                                            <form action="{{ route('psychologist.appointments.cancel', $appointment->id) }}" method="POST" class="d-inline">
-                                                                @csrf
-                                                                <button type="submit" class="text-danger-icon border-0 bg-transparent"><i class="fa-solid fa-xmark"></i></button>
-                                                            </form>
+                                                            <button type="button" class="text-danger-icon border-0 bg-transparent remove-appointment-btn" data-appointment-id="{{ $appointment->id }}"><i class="fa-solid fa-xmark"></i></button>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -155,7 +152,7 @@
                                             <h5>Recent Patients</h5>
                                         </div>
                                         <div class="card-view-link">
-                                            <a href="{{url('my-patients')}}">View All</a>
+                                            <a href="{{ url('psychologist/my-patients') }}">View All</a>
                                         </div>
                                     </div>
                                     <div class="dashboard-card-body">
@@ -475,83 +472,6 @@
                             </div>
                         </div>
                         <!-- /Refund Requests Section -->
-
-                        <!-- Notifications Section -->
-                        <div id="notifications" class="col-xl-12 d-flex mt-4">
-                        @if(isset($notifications) && $notifications->count() > 0)
-                            <div class="dashboard-card w-100">
-                                <div class="dashboard-card-head">
-                                    <div class="header-title">
-                                        <h5>Recent Notifications 
-                                            @if($unreadCount > 0)
-                                                <span class="badge bg-danger ms-2">{{ $unreadCount }} unread</span>
-                                            @endif
-                                        </h5>
-                                    </div>
-                                    @if($unreadCount > 0)
-                                    <div class="card-view-link">
-                                        <a href="javascript:void(0)" onclick="markAllAsRead()">Mark All as Read</a>
-                                    </div>
-                                    @endif
-                                </div>
-                                <div class="dashboard-card-body">
-                                    <div class="table-responsive">
-                                        <table class="table dashboard-table">
-                                            <tbody>
-                                                @foreach($notifications as $notification)
-                                                    @php
-                                                        $data = $notification->data;
-                                                        $isRead = !is_null($notification->read_at);
-                                                    @endphp
-                                                    <tr class="{{ !$isRead ? 'table-active' : '' }}">
-                                                        <td>
-                                                            <div class="d-flex align-items-center">
-                                                                <div class="me-3">
-                                                                    <i class="fa-solid fa-bullhorn text-primary" style="font-size: 24px;"></i>
-                                                                </div>
-                                                                <div class="flex-grow-1">
-                                                                    <h6 class="mb-1">
-                                                                        {{ $data['title'] ?? 'Announcement' }}
-                                                                        @if(!$isRead)
-                                                                            <span class="badge bg-danger badge-sm ms-2">New</span>
-                                                                        @endif
-                                                                        @if(isset($data['priority']) && in_array($data['priority'], ['urgent', 'high']))
-                                                                            <span class="badge bg-{{ $data['priority'] == 'urgent' ? 'danger' : 'warning' }} badge-sm ms-1">{{ ucfirst($data['priority']) }}</span>
-                                                                        @endif
-                                                                    </h6>
-                                                                    <p class="text-muted mb-1">{{ $data['message'] ?? '' }}</p>
-                                                                    <small class="text-muted">{{ $notification->created_at->format('M d, Y h:i A') }} ({{ $notification->created_at->diffForHumans() }})</small>
-                                                                </div>
-                                                                @if(!$isRead)
-                                                                <div class="ms-3">
-                                                                    <button class="btn btn-sm btn-outline-primary" onclick="markAsRead('{{ $notification->id }}')">Mark as Read</button>
-                                                                </div>
-                                                                @endif
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        @else
-                        <div class="dashboard-card w-100">
-                            <div class="dashboard-card-head">
-                                <div class="header-title">
-                                    <h5>Notifications</h5>
-                                </div>
-                            </div>
-                            <div class="dashboard-card-body">
-                                <div class="text-center py-4">
-                                    <i class="fa-solid fa-bell-slash text-muted" style="font-size: 48px;"></i>
-                                    <p class="text-muted mt-3 mb-0">No notifications yet</p>
-                                </div>
-                            </div>
-                        </div>
-                        @endif
                        
                     </div>
                                         
@@ -639,39 +559,25 @@
     document.getElementById('appointment-chart').innerHTML = '<div class="text-center py-5"><p class="text-muted">No appointment data available</p></div>';
     @endif
 
-    function markAsRead(notificationId) {
-        fetch(`/notifications/${notificationId}/read`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    }
-
-    function markAllAsRead() {
-        fetch('/notifications/mark-all-read', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    }
+    // Handle appointment removal from dashboard
+    document.querySelectorAll('.remove-appointment-btn').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const appointmentRow = button.closest('tr');
+            
+            // Remove the row from the table with animation
+            appointmentRow.style.transition = 'opacity 0.3s ease-out';
+            appointmentRow.style.opacity = '0';
+            setTimeout(function() {
+                appointmentRow.remove();
+                
+                // Check if table is empty
+                const tbody = document.querySelector('.appoint-table tbody');
+                if (tbody && tbody.children.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" class="text-center">No appointments found</td></tr>';
+                }
+            }, 300);
+        });
+    });
 </script>
 @endpush
 @endsection

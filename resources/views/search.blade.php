@@ -65,7 +65,7 @@
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-4">
-                        <h3>Showing <span class="text-secondary">{{ $psychologists->total() ?? 0 }}</span> Psychologists For You</h3>
+                        <h3>Showing <span class="text-secondary">{{ isset($psychologists) && $psychologists ? $psychologists->total() : 0 }}</span> Psychologists For You</h3>
                     </div>
                 </div>
                 <div class="col-md-6">

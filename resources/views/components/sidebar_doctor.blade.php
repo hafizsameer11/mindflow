@@ -1,4 +1,30 @@
      <!-- Profile Sidebar -->
+     <style>
+        .logout-menu-item button.sidebar-menu-link {
+            width: 100%;
+            padding: 0.75rem 1.5rem;
+            color: inherit;
+            text-decoration: none;
+            background: transparent !important;
+            border: none;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .logout-menu-item button.sidebar-menu-link:hover {
+            background-color: rgba(0, 0, 0, 0.05) !important;
+            color: #0d6efd;
+        }
+        .logout-menu-item button.sidebar-menu-link i {
+            margin-right: 0.5rem;
+            font-size: 1.1rem;
+        }
+        .logout-menu-item button.sidebar-menu-link span {
+            font-size: 0.9375rem;
+            font-weight: 400;
+        }
+     </style>
      <div class="profile-sidebar doctor-sidebar profile-sidebar-new">
         <div class="widget-profile pro-widget-content">
             <div class="profile-info-widget">
@@ -37,7 +63,7 @@
                         </a>
                     </li>
                     <li class="{{ Request::is('psychologist/dashboard') && isset($notifications) ? 'active' : '' }}">
-                        <a href="{{ route('psychologist.dashboard') }}#notifications">
+                        <a href="{{ route('psychologist.notifications') }}">
                             <i class="fa-solid fa-bell"></i>
                             <span>Notifications</span>
                             @php
@@ -92,11 +118,11 @@
                             <span>Earnings & Payments</span>
                         </a>
                     </li>
-                    <li>
-                        <form method="POST" action="{{ route('psychologist.logout') }}" class="d-inline w-100">
+                    <li class="logout-menu-item">
+                        <form method="POST" action="{{ route('psychologist.logout') }}" class="d-inline w-100 m-0">
                             @csrf
-                            <button type="submit" class="w-100 text-start border-0 bg-transparent p-0" style="color: inherit; text-decoration: none; background: transparent !important; width: 100%; display: flex; align-items: center; padding: 0.75rem 1.5rem;">
-                                <i class="isax isax-logout"></i>
+                            <button type="submit" class="w-100 text-start border-0 bg-transparent p-0 d-flex align-items-center sidebar-menu-link" style="color: inherit; text-decoration: none; background: transparent !important; width: 100%; padding: 0.75rem 1.5rem; transition: all 0.3s ease; cursor: pointer;">
+                                <i class="isax isax-logout me-2"></i>
                                 <span>Logout</span>
                             </button>
                         </form>

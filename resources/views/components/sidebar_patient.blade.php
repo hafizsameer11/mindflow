@@ -41,8 +41,8 @@
                             <span>Dashboard</span>
                         </a>
                     </li>
-                    <li class="{{ Request::is('patient/dashboard') && isset($notifications) ? 'active' : '' }}">
-                        <a href="{{ route('patient.dashboard') }}#notifications">
+                    <li class="{{ Request::is('patient/notifications*') ? 'active' : '' }}">
+                        <a href="{{ route('patient.notifications') }}">
                             <i class="fa-solid fa-bell"></i>
                             <span>Notifications</span>
                             @php
@@ -79,8 +79,8 @@
                             <span>Feedback Review</span>
                         </a>
                     </li>
-                    <li class="{{ Request::is('patient/dashboard') ? 'active' : '' }}">
-                        <a href="{{ route('patient.dashboard') }}#history">
+                    <li class="{{ Request::is('patient/history*') ? 'active' : '' }}">
+                        <a href="{{ route('patient.history') }}">
                             <i class="fa-solid fa-history"></i>
                             <span>View History</span>
                         </a>

@@ -107,27 +107,64 @@ class PatientController extends Controller
             ->take(5)
             ->get();
 
-        // Get history data for View History section
+        return view('patient-dashboard', compact(
+            'stats', 
+            'recent_appointments', 
+            'upcoming_sessions',
+            'feedbackStats', 
+            'recent_feedback', 
+            'pending_feedback'
+        ));
+    }
+
+    public function notifications()
+    {
+        $patient = Auth::user()->patient;
+        
+        if (!$patient) {
+            return redirect()->route('patient.profile.create');
+        }
+
+        // Get all notifications (announcements) with pagination
+        $notifications = Auth::user()->notifications()
+            ->where('type', 'App\Notifications\AdminAnnouncementNotification')
+            ->latest()
+            ->paginate(20);
+
+        // Get unread notification count
+        $unreadCount = Auth::user()->unreadNotifications()
+            ->where('type', 'App\Notifications\AdminAnnouncementNotification')
+            ->count();
+
+        return view('patient.notifications.index', compact('notifications', 'unreadCount'));
+    }
+
+    public function history()
+    {
+        $patient = Auth::user()->patient;
+        
+        if (!$patient) {
+            return redirect()->route('patient.profile.create');
+        }
+
+        // Get all history data (not limited to 10)
         $history_appointments = Appointment::with(['psychologist.user', 'payment', 'prescription', 'feedback'])
             ->where('patient_id', $patient->id)
             ->whereIn('status', ['completed', 'cancelled'])
             ->latest()
-            ->take(10)
-            ->get();
+            ->paginate(15);
 
         $history_payments = Payment::with(['appointment.psychologist.user'])
             ->whereHas('appointment', function($query) use ($patient) {
                 $query->where('patient_id', $patient->id);
             })
             ->latest()
-            ->take(10)
-            ->get();
+            ->paginate(15);
 
         $history_prescriptions = Prescription::with(['appointment.psychologist.user'])
             ->where('patient_id', $patient->id)
             ->latest()
-            ->take(10)
-            ->get();
+            ->paginate(15);
 
         // Calculate treatment progress
         $treatment_progress = [
@@ -143,15 +180,7 @@ class PatientController extends Controller
             })->where('status', 'verified')->sum('amount'),
         ];
 
-        return view('patient-dashboard', compact(
-            'stats', 
-            'recent_appointments', 
-            'upcoming_sessions',
-            'notifications', 
-            'unreadCount', 
-            'feedbackStats', 
-            'recent_feedback', 
-            'pending_feedback',
+        return view('patient.history.index', compact(
             'history_appointments',
             'history_payments',
             'history_prescriptions',

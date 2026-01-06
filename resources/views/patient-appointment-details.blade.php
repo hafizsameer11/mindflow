@@ -169,6 +169,54 @@
                                         @endif
                                     </div>
                                 </div>
+                                @if($appointment->payment->status === 'verified' && $appointment->payment->refund_status === 'none')
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#refundModal{{ $appointment->payment->id }}">
+                                            <i class="fa-solid fa-money-bill-transfer me-2"></i>Request Refund
+                                        </button>
+                                    </div>
+                                </div>
+                                @elseif($appointment->payment->refund_status === 'requested')
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <div class="alert alert-info">
+                                            <i class="fa-solid fa-info-circle me-2"></i>
+                                            <strong>Refund Requested:</strong> Your refund request is under review. We will notify you once a decision is made.
+                                        </div>
+                                    </div>
+                                </div>
+                                @elseif($appointment->payment->refund_status === 'approved')
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <div class="alert alert-success">
+                                            <i class="fa-solid fa-check-circle me-2"></i>
+                                            <strong>Refund Approved:</strong> Your refund request has been approved and is being processed.
+                                        </div>
+                                    </div>
+                                </div>
+                                @elseif($appointment->payment->refund_status === 'processed')
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <div class="alert alert-success">
+                                            <i class="fa-solid fa-check-circle me-2"></i>
+                                            <strong>Refund Processed:</strong> Your refund has been processed successfully.
+                                        </div>
+                                    </div>
+                                </div>
+                                @elseif($appointment->payment->refund_status === 'rejected')
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <div class="alert alert-danger">
+                                            <i class="fa-solid fa-times-circle me-2"></i>
+                                            <strong>Refund Rejected:</strong> Your refund request has been rejected.
+                                            @if($appointment->payment->refund_notes)
+                                                <br><small>Reason: {{ $appointment->payment->refund_notes }}</small>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                                @endif
                             </div>
                         </div>
                         @elseif($appointment->status !== 'cancelled')
@@ -343,6 +391,67 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                         <button type="submit" class="btn btn-danger">Cancel Appointment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Refund Request Modal -->
+    @if($appointment->payment && $appointment->payment->status === 'verified' && $appointment->payment->refund_status === 'none')
+    <div class="modal fade" id="refundModal{{ $appointment->payment->id }}" tabindex="-1" aria-labelledby="refundModalLabel{{ $appointment->payment->id }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="{{ route('patient.payments.request-refund', $appointment->payment) }}" method="POST">
+                    @csrf
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="refundModalLabel{{ $appointment->payment->id }}">Request Refund</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            <i class="fa-solid fa-info-circle me-2"></i>
+                            Request a refund for this payment. The refund will need to be reviewed and approved before processing.
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Original Payment Amount:</label>
+                            <div class="form-control-plaintext"><strong>${{ number_format($appointment->payment->amount, 2) }}</strong></div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="refund_amount{{ $appointment->payment->id }}" class="form-label">Refund Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" 
+                                       class="form-control" 
+                                       id="refund_amount{{ $appointment->payment->id }}" 
+                                       name="refund_amount" 
+                                       step="0.01" 
+                                       min="0" 
+                                       max="{{ $appointment->payment->amount }}" 
+                                       value="{{ $appointment->payment->amount }}">
+                            </div>
+                            <small class="text-muted">Maximum refundable amount: ${{ number_format($appointment->payment->amount, 2) }}</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="refund_reason{{ $appointment->payment->id }}" class="form-label">Reason for Refund <span class="text-danger">*</span></label>
+                            <textarea class="form-control" 
+                                      id="refund_reason{{ $appointment->payment->id }}" 
+                                      name="refund_reason" 
+                                      rows="4" 
+                                      placeholder="Please provide a detailed reason for your refund request (minimum 10 characters)" 
+                                      required 
+                                      minlength="10">{{ old('refund_reason') }}</textarea>
+                            @error('refund_reason')
+                                <div class="text-danger small">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fa-solid fa-money-bill-transfer me-2"></i>Submit Refund Request
+                        </button>
                     </div>
                 </form>
             </div>
